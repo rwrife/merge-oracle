@@ -17,5 +17,24 @@ gh pr diff 42 | oracle read --method=tarot --json
 ## Install
 Not yet. Soon™.
 
+## Local development
+Requires Node.js ≥ 18.
+
+```bash
+npm ci
+npm run build      # compile TypeScript -> dist/
+npm test           # run vitest suite
+npm run dev hello  # run the CLI directly from src (via tsx)
+```
+
+After `npm run build`, you can invoke the CLI as `node dist/cli.js`:
+
+```bash
+node dist/cli.js --version
+node dist/cli.js hello --name ryan
+```
+
+CI runs `npm ci && npm run build && npm test` on every push and PR (see `.github/workflows/ci.yml`).
+
 ## License
 MIT (planned)
