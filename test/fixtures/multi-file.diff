@@ -1,0 +1,17 @@
+diff --git a/README.md b/README.md
+index aaaaaaa..bbbbbbb 100644
+--- a/README.md
++++ b/README.md
+@@ -1,1 +1,3 @@
+-# old
++# new
++
++more words
+diff --git a/src/extra.ts b/src/extra.ts
+new file mode 100644
+index 0000000..ccccccc
+--- /dev/null
++++ b/src/extra.ts
+@@ -0,0 +1,2 @@
++export const extra = 42;
++
