@@ -1,0 +1,9 @@
+diff --git a/src/oracle.ts b/src/oracle.ts
+index 1111111..2222222 100644
+--- a/src/oracle.ts
++++ b/src/oracle.ts
+@@ -1,3 +1,4 @@
+ export const VERSION = "0.0.1";
++export const TAGLINE = "divines the fate of your pull requests";
+
+ export function hello(name: string): string {

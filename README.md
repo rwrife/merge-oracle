@@ -32,7 +32,18 @@ After `npm run build`, you can invoke the CLI as `node dist/cli.js`:
 ```bash
 node dist/cli.js --version
 node dist/cli.js hello --name ryan
+
+# load a diff (M2: source loaders)
+node dist/cli.js read ./feature.diff
+node dist/cli.js read https://github.com/you/repo/pull/42
+git diff main | node dist/cli.js read -
+node dist/cli.js read ./feature.diff --json
 ```
+
+The `read` command auto-detects the source from the argument shape:
+- a GitHub PR URL → shells out to `gh pr view` + `gh pr diff`
+- `-` (or empty) → reads piped stdin
+- anything else → treated as a path to a `.diff`/`.patch` file
 
 CI runs `npm ci && npm run build && npm test` on every push and PR (see `.github/workflows/ci.yml`).
 
