@@ -39,7 +39,12 @@ node dist/cli.js read https://github.com/you/repo/pull/42
 git diff main | node dist/cli.js read -
 node dist/cli.js read ./feature.diff --json
 node dist/cli.js read ./feature.diff --offline   # canned mystical drivel, no LLM
+node dist/cli.js read ./feature.diff --method=tarot --offline
+node dist/cli.js methods                          # list available divination methods
 ```
+
+### Tarot reading (M4)
+The `tarot` method draws three Major Arcana cards (Past / Present / Future) seeded by a SHA-256 hash of the diff, so the same diff always yields the same spread. Cards may land upright or reversed, and the renderer flips reversed cards visually in the ASCII spread.
 
 ### LLM configuration (M3)
 The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:

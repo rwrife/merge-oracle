@@ -2,7 +2,8 @@
 import { Command } from "commander";
 import { hello, VERSION } from "./oracle.js";
 import { loadDiff } from "./sources/index.js";
-import { assembleReadingPrompt, createLlmClient, MissingApiKeyError } from "./llm/index.js";
+import { createLlmClient, MissingApiKeyError } from "./llm/index.js";
+import { DEFAULT_METHOD_ID, getMethod, listMethods } from "./methods/_registry.js";
 
 const program = new Command();
 
@@ -23,25 +24,46 @@ program
   .command("read")
   .description("load a diff from a GitHub PR URL, a file, or '-' for stdin")
   .argument("<source>", "PR URL, path to .diff/.patch, or '-' for stdin")
-  .option("--json", "emit the loaded diff envelope as JSON")
+  .option("--json", "emit the reading as JSON instead of rendered text")
   .option("--offline", "skip the LLM and return canned mystical drivel")
-  .action(async (source: string, opts: { json?: boolean; offline?: boolean }) => {
-    const loaded = await loadDiff(source);
-    if (opts.json) {
-      process.stdout.write(JSON.stringify(loaded, null, 2) + "\n");
+  .option("--method <id>", "divination method id", DEFAULT_METHOD_ID)
+  .action(async (source: string, opts: { json?: boolean; offline?: boolean; method: string }) => {
+    const method = getMethod(opts.method);
+    if (!method) {
+      console.error(
+        `unknown divination method: ${opts.method}. try one of: ${listMethods().map((m) => m.id).join(", ")}`,
+      );
+      process.exit(2);
       return;
     }
+    const loaded = await loadDiff(source);
+    const symbols = method.draw(loaded.diff);
     try {
       const client = createLlmClient({ offline: opts.offline });
-      const messages = assembleReadingPrompt({
-        methodName: "placeholder (M4 brings tarot)",
-        symbols: [],
-        diff: loaded.diff,
-      });
+      const messages = method.readingPrompt(symbols, loaded.diff);
       const reading = await client.complete(messages);
+      if (opts.json) {
+        process.stdout.write(
+          JSON.stringify(
+            {
+              source: loaded.source,
+              origin: loaded.origin,
+              method: method.id,
+              channel: client.id,
+              symbols,
+              reading,
+            },
+            null,
+            2,
+          ) + "\n",
+        );
+        return;
+      }
+      const art = method.render(symbols);
       process.stdout.write(
-        `🔮 the oracle has received ${loaded.diff.length} bytes from ${loaded.source} (${loaded.origin}).\n` +
-          `   (channel: ${client.id})\n\n${reading}\n`,
+        `🔮 ${method.name}\n` +
+          `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
+          `   channel: ${client.id}\n\n${art}\n\n${reading}\n`,
       );
     } catch (err) {
       if (err instanceof MissingApiKeyError) {
@@ -49,6 +71,15 @@ program
         process.exit(2);
       }
       throw err;
+    }
+  });
+
+program
+  .command("methods")
+  .description("list available divination methods")
+  .action(() => {
+    for (const m of listMethods()) {
+      process.stdout.write(`${m.id.padEnd(12)} — ${m.describe()}\n`);
     }
   });
 
