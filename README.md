@@ -38,7 +38,17 @@ node dist/cli.js read ./feature.diff
 node dist/cli.js read https://github.com/you/repo/pull/42
 git diff main | node dist/cli.js read -
 node dist/cli.js read ./feature.diff --json
+node dist/cli.js read ./feature.diff --offline   # canned mystical drivel, no LLM
 ```
+
+### LLM configuration (M3)
+The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:
+
+- `OPENAI_API_KEY` — required unless `--offline` is passed
+- `OPENAI_BASE_URL` — defaults to `https://api.openai.com/v1`; point at LM Studio, Ollama (`http://localhost:11434/v1`), vLLM, etc.
+- `OPENAI_MODEL` — defaults to `gpt-4o-mini`
+
+Without a key, `oracle read` exits 2 and reminds you to either set the key or pass `--offline`.
 
 The `read` command auto-detects the source from the argument shape:
 - a GitHub PR URL → shells out to `gh pr view` + `gh pr diff`
