@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/tarot ASCII render > ASCII spread matches snapshot for the multi-file fixture 1`] = `
+"+----------------+  +----------------+  +----------------+
+|   )desrever(   |  |    Present     |  |   )desrever(   |
+|                |  |                |  |                |
+|   noitalever   |  |    The Star    |  |    tnemngila   |
+|    lavaehpu    |  |      hope      |  |     eciohc     |
+|    rewoT ehT   |  |    clarity     |  |   srevoL ehT   |
+|                |  |                |  |                |
+|      tsaP      |  |   (upright)    |  |     erutuF     |
++----------------+  +----------------+  +----------------+
+
+Past: The Tower ↯   Present: The Star   Future: The Lovers"
+`;
+
+exports[`methods/tarot end-to-end (offline) > offline reading is stable for a fixed diff (snapshot) 1`] = `
+{
+  "cards": [
+    {
+      "id": "arcana:16",
+      "name": "The Tower",
+      "position": "Past",
+      "reversed": true,
+    },
+    {
+      "id": "arcana:17",
+      "name": "The Star",
+      "position": "Present",
+      "reversed": false,
+    },
+    {
+      "id": "arcana:6",
+      "name": "The Lovers",
+      "position": "Future",
+      "reversed": true,
+    },
+  ],
+  "reading": "🔮 the cards lay themselves down in candlelight…
+Past: the base branch carries old grudges; a forgotten TODO whispers.
+Present: your diff hums with intent — neither blessed nor cursed, simply willed.
+Future: CI will smile, but a reviewer's eyebrow shall arch at line breaks unseen.
+Verdict: the oracle nods. Proceed, but light a candle for the type-checker.",
+}
+`;
