@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/runes ASCII render > ASCII cast matches snapshot for the multi-file fixture 1`] = `
+"+-------+   +-------+   +-------+
+|       |   |       |   |       |
+|  [ᚦ]  |   |   ᛜ   |   |   ᚷ   |
+|       |   |       |   |       |
++-------+   +-------+   +-------+
+
+Situation: Thurisa Obstacle: Ingwaz ✶  Outcome: Gebo ✶  "
+`;

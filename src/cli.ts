@@ -78,8 +78,14 @@ program
   .command("methods")
   .description("list available divination methods")
   .action(() => {
-    for (const m of listMethods()) {
-      process.stdout.write(`${m.id.padEnd(12)} — ${m.describe()}\n`);
+    const methods = listMethods();
+    if (methods.length === 0) {
+      process.stdout.write("no divination methods registered — the veil is empty.\n");
+      return;
+    }
+    for (const m of methods) {
+      const marker = m.id === DEFAULT_METHOD_ID ? "*" : " ";
+      process.stdout.write(`${marker} ${m.id.padEnd(12)} ${m.name}\n      ${m.describe()}\n`);
     }
   });
 
