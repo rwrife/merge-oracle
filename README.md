@@ -41,6 +41,7 @@ node dist/cli.js read ./feature.diff --json
 node dist/cli.js read ./feature.diff --offline   # canned mystical drivel, no LLM
 node dist/cli.js read ./feature.diff --method=tarot --offline
 node dist/cli.js methods                          # list available divination methods
+node dist/cli.js methods --json                   # same list, machine-readable
 ```
 
 ### Tarot reading (M4)
