@@ -46,6 +46,24 @@ node dist/cli.js methods                          # list available divination me
 ### Tarot reading (M4)
 The `tarot` method draws three Major Arcana cards (Past / Present / Future) seeded by a SHA-256 hash of the diff, so the same diff always yields the same spread. Cards may land upright or reversed, and the renderer flips reversed cards visually in the ASCII spread.
 
+### Runes reading (M5)
+The `runes` method casts three Elder Futhark runes (Situation / Obstacle / Outcome) seeded by a different slice of the diff hash. Reversed runes are read as *merkstave* — their warning meaning.
+
+```bash
+node dist/cli.js read ./feature.diff --method=runes --offline
+```
+
+### How to add a divination method
+Methods are plain TypeScript files in `src/methods/`. The registry auto-discovers any sibling module that exports an object implementing the `DivinationMethod` interface (`id`, `name`, `describe`, `draw`, `readingPrompt`, `render`).
+
+1. Create `src/methods/<your-method>.ts`.
+2. Export a `DivinationMethod` (named or default export — both work). Pick a unique `id`.
+3. Optionally drop deck data in `src/data/decks/` (it ships to `dist/data/` automatically).
+4. Add tests in `tests/<your-method>.test.ts`.
+5. `npm run build && node dist/cli.js methods` — your method appears in the list and is usable via `--method=<id>`.
+
+Files starting with `_` and the shared `types.ts` are skipped by discovery.
+
 ### LLM configuration (M3)
 The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:
 
