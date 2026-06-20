@@ -77,8 +77,27 @@ program
 program
   .command("methods")
   .description("list available divination methods")
-  .action(() => {
+  .option("--json", "emit the method list as JSON instead of rendered text")
+  .action((opts: { json?: boolean }) => {
     const methods = listMethods();
+    if (opts.json) {
+      process.stdout.write(
+        JSON.stringify(
+          {
+            default: DEFAULT_METHOD_ID,
+            methods: methods.map((m) => ({
+              id: m.id,
+              name: m.name,
+              description: m.describe(),
+              default: m.id === DEFAULT_METHOD_ID,
+            })),
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+      return;
+    }
     if (methods.length === 0) {
       process.stdout.write("no divination methods registered — the veil is empty.\n");
       return;
