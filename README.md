@@ -5,7 +5,7 @@
 A mystical CLI oracle that divines the fate of your pull requests via tarot, runes, tea leaves, or I-Ching. Half useful PR review, half theatre — feed it a diff, get back a dramatic ritual reading.
 
 ## Status
-🌑 Pre-alpha. The oracle is still attuning to the cosmic git stream. See [PLAN.md](./PLAN.md).
+🌒 Approaching first release. Tarot + runes methods are wired up end-to-end; npm publish is gated behind the `release` workflow (tag `v*`). See [PLAN.md](./PLAN.md) and [CHANGELOG.md](./CHANGELOG.md).
 
 ## Quick taste (planned UX)
 ```bash
@@ -15,7 +15,13 @@ gh pr diff 42 | oracle read --method=tarot --json
 ```
 
 ## Install
-Not yet. Soon™.
+
+```bash
+npm install -g @rwrife/merge-oracle
+oracle --version
+```
+
+Published from CI on every `v*` tag — see `.github/workflows/release.yml`.
 
 ## Local development
 Requires Node.js ≥ 18.
@@ -82,4 +88,4 @@ The `read` command auto-detects the source from the argument shape:
 CI runs `npm ci && npm run build && npm test` on every push and PR (see `.github/workflows/ci.yml`).
 
 ## License
-MIT (planned)
+MIT — see [LICENSE](./LICENSE).

@@ -1,22 +1,45 @@
 {
   "name": "@rwrife/merge-oracle",
   "version": "0.0.1",
-  "description": "A mystical CLI oracle that divines the fate of your pull requests.",
+  "description": "A mystical CLI oracle that divines the fate of your pull requests via tarot, runes, and more.",
   "type": "module",
   "bin": {
     "oracle": "./dist/cli.js"
   },
   "main": "./dist/cli.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "PLAN.md"
   ],
+  "keywords": [
+    "cli",
+    "pr",
+    "pull-request",
+    "review",
+    "ai",
+    "llm",
+    "tarot",
+    "runes",
+    "divination",
+    "oracle",
+    "git",
+    "diff"
+  ],
+  "author": "rwrife",
+  "homepage": "https://github.com/rwrife/merge-oracle#readme",
+  "bugs": {
+    "url": "https://github.com/rwrife/merge-oracle/issues"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('src/data','dist/data',{recursive:true})\"",
     "start": "node dist/cli.js",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "commander": "^12.1.0"
@@ -34,5 +57,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rwrife/merge-oracle.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
