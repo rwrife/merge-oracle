@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/tea-leaves ASCII render > ASCII cast matches snapshot for the multi-file fixture 1`] = `
+" ___________________ 
+(         .         )
+|                   |
+|         *         |
+|                   |
+ \\        &        /
+  ~~~~~~~~~~~~~~~~~  
+Rim: Drop  ·  Side: Star  ·  Bottom: Anchor
+stats: 2 file(s), +5/-1, 2 hunk(s)"
+`;
