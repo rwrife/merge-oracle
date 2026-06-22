@@ -53,6 +53,13 @@ node dist/cli.js methods --json                   # same list, machine-readable
 ### Tarot reading (M4)
 The `tarot` method draws three Major Arcana cards (Past / Present / Future) seeded by a SHA-256 hash of the diff, so the same diff always yields the same spread. Cards may land upright or reversed, and the renderer flips reversed cards visually in the ASCII spread.
 
+### Tea leaves reading
+The `tea-leaves` method does not seed cards from a hash — it actually *reads the shape of the diff itself*. A small parser walks the unified diff to count files, additions, deletions, hunk topology, and directories touched; those stats then promote leaf-shapes in the cup (e.g. `mountain` for big diffs, `knife` when deletions dominate, `scales` for balanced add/delete, `web` when many files are entangled). Three shapes settle into **Rim / Side / Bottom** — imminent, present, distant.
+
+```bash
+node dist/cli.js read ./feature.diff --method=tea-leaves --offline
+```
+
 ### Runes reading (M5)
 The `runes` method casts three Elder Futhark runes (Situation / Obstacle / Outcome) seeded by a different slice of the diff hash. Reversed runes are read as *merkstave* — their warning meaning.
 

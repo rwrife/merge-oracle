@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `tea-leaves` divination method: parses diff structure (files, +/-, hunks, dirs) and reads three shapes from the cup as Rim / Side / Bottom. (#7)
 - `LICENSE` file (MIT).
 - `CHANGELOG.md` tracking notable changes.
 - Publishing metadata in `package.json` (`keywords`, `author`, `homepage`, `bugs`, `publishConfig`).
