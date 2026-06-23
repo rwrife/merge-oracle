@@ -4,6 +4,7 @@ import { hello, VERSION } from "./oracle.js";
 import { loadDiff } from "./sources/index.js";
 import { createLlmClient, MissingApiKeyError } from "./llm/index.js";
 import { DEFAULT_METHOD_ID, getMethod, listMethods } from "./methods/_registry.js";
+import { runStdioServer } from "./mcp/server.js";
 
 const program = new Command();
 
@@ -106,6 +107,13 @@ program
       const marker = m.id === DEFAULT_METHOD_ID ? "*" : " ";
       process.stdout.write(`${marker} ${m.id.padEnd(12)} ${m.name}\n      ${m.describe()}\n`);
     }
+  });
+
+program
+  .command("mcp")
+  .description("run as an MCP server over stdio (newline-delimited JSON-RPC)")
+  .action(async () => {
+    await runStdioServer();
   });
 
 program.parseAsync(process.argv).catch((err) => {
