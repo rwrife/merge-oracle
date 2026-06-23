@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `i-ching` divination method: hashes the diff into a six-line hexagram cast under traditional yarrow-stalk probabilities; changing lines transform a Primary hexagram into a Derived one, read as the merge prophecy. (#8)
 - `tea-leaves` divination method: parses diff structure (files, +/-, hunks, dirs) and reads three shapes from the cup as Rim / Side / Bottom. (#7)
 - `LICENSE` file (MIT).
 - `CHANGELOG.md` tracking notable changes.

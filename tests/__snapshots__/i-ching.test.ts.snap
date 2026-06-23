@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/i-ching ASCII render > matches snapshot for the multi-file fixture 1`] = `
+"䷆ Shi (The Army)        ䷇ Bi (Holding Together)
+
+— —           ⇒  — —  
+— —  x        ⇒  —————
+— —           ⇒  — —  
+— —           ⇒  — —  
+—————  o      ⇒  — —  
+— —           ⇒  — —  "
+`;

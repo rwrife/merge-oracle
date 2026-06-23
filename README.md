@@ -5,7 +5,7 @@
 A mystical CLI oracle that divines the fate of your pull requests via tarot, runes, tea leaves, or I-Ching. Half useful PR review, half theatre — feed it a diff, get back a dramatic ritual reading.
 
 ## Status
-🌒 Approaching first release. Tarot + runes methods are wired up end-to-end; npm publish is gated behind the `release` workflow (tag `v*`). See [PLAN.md](./PLAN.md) and [CHANGELOG.md](./CHANGELOG.md).
+🌒 Approaching first release. Tarot, runes, tea-leaves, and I-Ching methods are wired up end-to-end; npm publish is gated behind the `release` workflow (tag `v*`). See [PLAN.md](./PLAN.md) and [CHANGELOG.md](./CHANGELOG.md).
 
 ## Quick taste (planned UX)
 ```bash
@@ -65,6 +65,13 @@ The `runes` method casts three Elder Futhark runes (Situation / Obstacle / Outco
 
 ```bash
 node dist/cli.js read ./feature.diff --method=runes --offline
+```
+
+### I-Ching reading
+The `i-ching` method casts a hexagram from the diff hash — six lines drawn under traditional yarrow-stalk probabilities. Changing lines (old yang / old yin) transform the Primary hexagram into a Derived one, and the oracle reads the transformation as the merge prophecy. Stable casts (no changing lines) read the Primary alone.
+
+```bash
+node dist/cli.js read ./feature.diff --method=i-ching --offline
 ```
 
 ### How to add a divination method
