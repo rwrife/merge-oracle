@@ -101,6 +101,42 @@ Wire format is line-delimited JSON-RPC 2.0 (one request per line). Example Claud
 
 For experiments without an LLM key, call `oracle.read` with `"offline": true`.
 
+### GitHub Action — sticky PR readings
+The repo also ships a composite GitHub Action so every PR automatically gets a mystical reading posted as a **sticky comment** (updated in place on each push, not re-posted). Drop this into `.github/workflows/merge-oracle.yml` in any repo:
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reading:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rwrife/merge-oracle@v1
+        with:
+          method: tarot            # tarot | runes | tea-leaves | i-ching
+          offline: "false"          # use canned drivel when no LLM is configured
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+```
+
+A ready-to-copy example lives at [`examples/workflow.yml`](./examples/workflow.yml). Inputs:
+
+| input | default | description |
+| --- | --- | --- |
+| `method` | `tarot` | Divination method id. |
+| `offline` | `false` | If `true`, skip the LLM and use the canned reading. |
+| `version` | `latest` | npm version of `@rwrife/merge-oracle` to install. |
+| `node-version` | `20` | Node version used by the action. |
+| `marker` | `<!-- merge-oracle:sticky -->` | Hidden marker used to find/update the sticky comment. |
+| `github-token` | _required_ | Needs `pull-requests: write`. |
+| `openai-api-key` / `openai-base-url` / `openai-model` | _empty_ | Passed through as `OPENAI_*` env vars. |
+
 ### How to add a divination method
 Methods are plain TypeScript files in `src/methods/`. The registry auto-discovers any sibling module that exports an object implementing the `DivinationMethod` interface (`id`, `name`, `describe`, `draw`, `readingPrompt`, `render`).
 
