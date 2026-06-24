@@ -74,6 +74,33 @@ The `i-ching` method casts a hexagram from the diff hash — six lines drawn und
 node dist/cli.js read ./feature.diff --method=i-ching --offline
 ```
 
+### MCP server mode
+The oracle can expose itself as an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Desktop / Cursor / Codex can summon readings inline:
+
+```bash
+node dist/cli.js mcp
+```
+
+Tools exposed:
+- `oracle.read` — divines a PR/diff using a chosen method (`source`, `method?`, `offline?`, `json?`)
+- `oracle.methods` — lists available divination methods
+
+Wire format is line-delimited JSON-RPC 2.0 (one request per line). Example Claude Desktop config entry:
+
+```json
+{
+  "mcpServers": {
+    "merge-oracle": {
+      "command": "oracle",
+      "args": ["mcp"],
+      "env": { "OPENAI_API_KEY": "sk-..." }
+    }
+  }
+}
+```
+
+For experiments without an LLM key, call `oracle.read` with `"offline": true`.
+
 ### How to add a divination method
 Methods are plain TypeScript files in `src/methods/`. The registry auto-discovers any sibling module that exports an object implementing the `DivinationMethod` interface (`id`, `name`, `describe`, `draw`, `readingPrompt`, `render`).
 
