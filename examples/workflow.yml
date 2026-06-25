@@ -1,0 +1,26 @@
+name: Merge Oracle reading
+
+# Example workflow showing how to call rwrife/merge-oracle@v1 as a composite
+# action so every opened/updated PR gets a sticky mystical reading comment.
+#
+# Copy this into `.github/workflows/merge-oracle.yml` in any repo.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reading:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rwrife/merge-oracle@v1
+        with:
+          method: tarot
+          # Drop --offline once you wire up an LLM key:
+          offline: "true"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # openai-api-key: ${{ secrets.OPENAI_API_KEY }}

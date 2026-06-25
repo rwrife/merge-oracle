@@ -1,0 +1,146 @@
+name: "merge-oracle"
+description: "Divine the fate of a pull request and post a mystical reading as a sticky PR comment."
+author: "rwrife"
+branding:
+  icon: "eye"
+  color: "purple"
+
+inputs:
+  method:
+    description: "Divination method id (tarot, runes, tea-leaves, i-ching)."
+    required: false
+    default: "tarot"
+  offline:
+    description: "If 'true', skip the LLM and use the canned offline reading."
+    required: false
+    default: "false"
+  version:
+    description: "Version of @rwrife/merge-oracle to install from npm (e.g. 'latest', '0.1.0')."
+    required: false
+    default: "latest"
+  node-version:
+    description: "Node.js version used to run the oracle."
+    required: false
+    default: "20"
+  marker:
+    description: "Hidden HTML marker used to find and update the sticky comment."
+    required: false
+    default: "<!-- merge-oracle:sticky -->"
+  github-token:
+    description: "Token used to post / update the PR comment and fetch the diff. Needs pull-requests: write."
+    required: true
+  openai-api-key:
+    description: "OpenAI-compatible API key. Optional when 'offline' is true."
+    required: false
+    default: ""
+  openai-base-url:
+    description: "Override for OPENAI_BASE_URL (e.g. an Azure / local endpoint)."
+    required: false
+    default: ""
+  openai-model:
+    description: "Override for OPENAI_MODEL."
+    required: false
+    default: ""
+
+outputs:
+  reading:
+    description: "The rendered reading text."
+    value: ${{ steps.read.outputs.reading }}
+  method:
+    description: "Divination method id that was used."
+    value: ${{ inputs.method }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Guard — pull_request event
+      shell: bash
+      run: |
+        if [ -z "${PR_NUMBER}" ] || [ "${PR_NUMBER}" = "null" ]; then
+          echo "::error::merge-oracle action must run on a pull_request event (no PR number found)."
+          exit 1
+        fi
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install @rwrife/merge-oracle
+      shell: bash
+      env:
+        ORACLE_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        npm install -g "@rwrife/merge-oracle@${ORACLE_VERSION}"
+        oracle --version
+
+    - name: Fetch PR diff
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        mkdir -p "${RUNNER_TEMP}/merge-oracle"
+        gh pr diff "${PR_NUMBER}" --repo "${REPO}" > "${RUNNER_TEMP}/merge-oracle/pr.diff"
+        wc -c "${RUNNER_TEMP}/merge-oracle/pr.diff"
+
+    - name: Consult the oracle
+      id: read
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        OPENAI_BASE_URL: ${{ inputs.openai-base-url }}
+        OPENAI_MODEL: ${{ inputs.openai-model }}
+        METHOD: ${{ inputs.method }}
+        OFFLINE: ${{ inputs.offline }}
+      run: |
+        set -euo pipefail
+        args=(read "${RUNNER_TEMP}/merge-oracle/pr.diff" --method "${METHOD}")
+        if [ "${OFFLINE}" = "true" ]; then
+          args+=(--offline)
+        fi
+        oracle "${args[@]}" | tee "${RUNNER_TEMP}/merge-oracle/reading.txt"
+        {
+          echo "reading<<__ORACLE_EOF__"
+          cat "${RUNNER_TEMP}/merge-oracle/reading.txt"
+          echo "__ORACLE_EOF__"
+        } >> "${GITHUB_OUTPUT}"
+
+    - name: Post sticky reading comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+        MARKER: ${{ inputs.marker }}
+        METHOD: ${{ inputs.method }}
+      run: |
+        set -euo pipefail
+        reading_body="$(cat "${RUNNER_TEMP}/merge-oracle/reading.txt")"
+        body_file="${RUNNER_TEMP}/merge-oracle/comment.md"
+        {
+          printf '%s\n' "${MARKER}"
+          printf '## 🔮 merge-oracle — `%s` reading\n\n' "${METHOD}"
+          printf '```\n%s\n```\n\n' "${reading_body}"
+          printf '<sub>Posted by [merge-oracle](https://github.com/rwrife/merge-oracle). Method: `%s`.</sub>\n' "${METHOD}"
+        } > "${body_file}"
+
+        existing="$(gh api \
+          "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+          --paginate \
+          --jq "[.[] | select(.body | contains(\"${MARKER}\"))][0].id // empty")"
+
+        if [ -n "${existing}" ]; then
+          echo "Updating existing sticky comment ${existing}"
+          gh api -X PATCH "repos/${REPO}/issues/comments/${existing}" \
+            -F body=@"${body_file}" >/dev/null
+        else
+          echo "Creating new sticky comment"
+          gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            -F body=@"${body_file}" >/dev/null
+        fi
