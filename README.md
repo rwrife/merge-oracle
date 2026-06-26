@@ -74,6 +74,13 @@ The `i-ching` method casts a hexagram from the diff hash — six lines drawn und
 node dist/cli.js read ./feature.diff --method=i-ching --offline
 ```
 
+### Numerology reading
+The `numerology` method reads the *numbers* of a diff — no hash, no LLM trickery in the symbol derivation, just pure arithmetic mysticism. It collects four counts (total churn, files touched, hunks, longest contiguous run of additions) and reduces each via classic digit-sum-mod-9, **preserving master numbers 11 / 22 / 33**. The four resulting digits map to **Life Path / Expression / Soul Urge / Personality** and are woven into a single merge prophecy.
+
+```bash
+node dist/cli.js read ./feature.diff --method=numerology --offline
+```
+
 ### MCP server mode
 The oracle can expose itself as an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Desktop / Cursor / Codex can summon readings inline:
 
@@ -119,7 +126,7 @@ jobs:
     steps:
       - uses: rwrife/merge-oracle@v1
         with:
-          method: tarot            # tarot | runes | tea-leaves | i-ching
+          method: tarot            # tarot | runes | tea-leaves | i-ching | numerology
           offline: "false"          # use canned drivel when no LLM is configured
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
