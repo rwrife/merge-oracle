@@ -81,6 +81,19 @@ The `numerology` method reads the *numbers* of a diff — no hash, no LLM tricke
 node dist/cli.js read ./feature.diff --method=numerology --offline
 ```
 
+### Cursing your repo
+Opt-in pre-push hook. `oracle bless --install` writes a tiny `.git/hooks/pre-push` script that pipes your outgoing diff through `oracle bless --check` (pure offline heuristics — no LLM, no network) and aborts the push when the verdict's `severity` meets/exceeds `ORACLE_BLESS_THRESHOLD` (default `8`). Catches the obvious sins: secret-shaped strings in additions (`AKIA…`, `sk-…`, `ghp_…`, PEM keys), removed test files, mass-deletion sprees, `TODO: revert before merge` markers, and absurdly-huge diffs.
+
+```bash
+node dist/cli.js bless --install         # writes .git/hooks/pre-push (marker-tagged, idempotent)
+node dist/cli.js bless --status          # installed / not-installed / foreign-hook-present
+node dist/cli.js bless --uninstall       # removes only the oracle-managed hook
+ORACLE_BLESS_THRESHOLD=6 git push        # tighten the threshold per-push
+git push --no-verify                     # standard git escape hatch
+```
+
+Run `node dist/cli.js bless --check ./some.diff` to preview the verdict without installing anything. `--force` lets `--install` overwrite a non-oracle pre-push hook (and lets `--uninstall` remove one).
+
 ### MCP server mode
 The oracle can expose itself as an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Desktop / Cursor / Codex can summon readings inline:
 
