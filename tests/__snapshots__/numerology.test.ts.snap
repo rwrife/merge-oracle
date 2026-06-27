@@ -1,0 +1,130 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/numerology ASCII render > ASCII chart matches snapshot for the multi-file fixture 1`] = `
+"+-------------+-------------+
+|  Life Path  | Expression  |
+|      6      |      2      |
++-------------+-------------+
+|  Soul Urge  | Personality |
+|      2      |      3      |
++-------------+-------------+
+
+inputs: churn=6, files=2, hunks=2, longest+run=3"
+`;
+
+exports[`methods/numerology cast > snapshot of the cast for the multi-file fixture 1`] = `
+[
+  {
+    "id": "num:life-path:6",
+    "meta": {
+      "keyword": "harmony / refactor",
+      "master": false,
+      "meaning": "tidying and care; this PR seeks order, not novelty.",
+      "number": 6,
+      "raw": {
+        "churn": 6,
+        "files": 2,
+        "hunks": 2,
+        "longestRun": 3,
+      },
+      "slotGloss": "from total churn (additions + deletions) — the PR's destiny",
+      "stats": {
+        "addRatio": 0.8333333333333334,
+        "additions": 5,
+        "deletions": 1,
+        "dirs": 2,
+        "files": 2,
+        "hunks": 2,
+        "maxHunkLines": 4,
+        "net": 4,
+      },
+    },
+    "name": "Life Path 6",
+    "position": "Life Path",
+  },
+  {
+    "id": "num:expression:2",
+    "meta": {
+      "keyword": "partnership / review",
+      "master": false,
+      "meaning": "balance and dialogue; this change wants a co-signer.",
+      "number": 2,
+      "raw": {
+        "churn": 6,
+        "files": 2,
+        "hunks": 2,
+        "longestRun": 3,
+      },
+      "slotGloss": "from files touched — how the PR shows itself to the world",
+      "stats": {
+        "addRatio": 0.8333333333333334,
+        "additions": 5,
+        "deletions": 1,
+        "dirs": 2,
+        "files": 2,
+        "hunks": 2,
+        "maxHunkLines": 4,
+        "net": 4,
+      },
+    },
+    "name": "Expression 2",
+    "position": "Expression",
+  },
+  {
+    "id": "num:soul-urge:2",
+    "meta": {
+      "keyword": "partnership / review",
+      "master": false,
+      "meaning": "balance and dialogue; this change wants a co-signer.",
+      "number": 2,
+      "raw": {
+        "churn": 6,
+        "files": 2,
+        "hunks": 2,
+        "longestRun": 3,
+      },
+      "slotGloss": "from hunk count — the inner motive driving the change",
+      "stats": {
+        "addRatio": 0.8333333333333334,
+        "additions": 5,
+        "deletions": 1,
+        "dirs": 2,
+        "files": 2,
+        "hunks": 2,
+        "maxHunkLines": 4,
+        "net": 4,
+      },
+    },
+    "name": "Soul Urge 2",
+    "position": "Soul Urge",
+  },
+  {
+    "id": "num:personality:3",
+    "meta": {
+      "keyword": "expression / chatter",
+      "master": false,
+      "meaning": "energetic, scattered output; expect comments.",
+      "number": 3,
+      "raw": {
+        "churn": 6,
+        "files": 2,
+        "hunks": 2,
+        "longestRun": 3,
+      },
+      "slotGloss": "from the longest contiguous run of additions — its outward face",
+      "stats": {
+        "addRatio": 0.8333333333333334,
+        "additions": 5,
+        "deletions": 1,
+        "dirs": 2,
+        "files": 2,
+        "hunks": 2,
+        "maxHunkLines": 4,
+        "net": 4,
+      },
+    },
+    "name": "Personality 3",
+    "position": "Personality",
+  },
+]
+`;
