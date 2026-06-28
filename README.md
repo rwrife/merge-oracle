@@ -157,6 +157,43 @@ A ready-to-copy example lives at [`examples/workflow.yml`](./examples/workflow.y
 | `github-token` | _required_ | Needs `pull-requests: write`. |
 | `openai-api-key` / `openai-base-url` / `openai-model` | _empty_ | Passed through as `OPENAI_*` env vars. |
 
+### Personas
+Methods choose the *symbols*. **Personas** choose the *voice* that delivers the reading. Same diff, different narrator = different screenshot.
+
+List what's available:
+
+```sh
+oracle personas
+oracle personas --json
+```
+
+Use one for a single reading:
+
+```sh
+oracle read ./pr.diff --persona=crone
+oracle read ./pr.diff --persona=bard --method=runes
+oracle read - --offline --persona=corporate-mystic --json
+```
+
+Or set a default for your shell:
+
+```sh
+export ORACLE_PERSONA=valley-psychic
+```
+
+Shipped personas:
+
+- `default` — the canonical merge-oracle voice (used when no flag/env is set).
+- `crone` — ancient, gravelly, fond of warnings.
+- `bard` — every reading in rhyming couplets.
+- `corporate-mystic` — deadpan PR-review-speak, but with crystals.
+- `valley-psychic` — vibes-based, lots of "like" and "literally".
+- `shakespearean` — Early Modern English soliloquies.
+
+**Adding your own:** drop a file in `src/personas/` exporting an object with `{ id, name, describe(), systemPrompt, offlineLines(symbols) }`. The registry auto-discovers it the same way methods are discovered. Files starting with `_` and the shared `types.ts` are skipped.
+
+Omitting `--persona` (and `ORACLE_PERSONA`) preserves the historical voice exactly.
+
 ### How to add a divination method
 Methods are plain TypeScript files in `src/methods/`. The registry auto-discovers any sibling module that exports an object implementing the `DivinationMethod` interface (`id`, `name`, `describe`, `draw`, `readingPrompt`, `render`).
 
