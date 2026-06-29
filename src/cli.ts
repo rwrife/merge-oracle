@@ -4,6 +4,13 @@ import { hello, VERSION } from "./oracle.js";
 import { loadDiff } from "./sources/index.js";
 import { createLlmClient, MissingApiKeyError } from "./llm/index.js";
 import { DEFAULT_METHOD_ID, getMethod, listMethods } from "./methods/_registry.js";
+import {
+  DEFAULT_PERSONA_ID,
+  getPersona,
+  listPersonas,
+  resolvePersona,
+} from "./personas/_registry.js";
+import { createOfflineClient } from "./llm/client.js";
 import { runStdioServer } from "./mcp/server.js";
 import {
   DEFAULT_BLESS_THRESHOLD,
@@ -35,7 +42,12 @@ program
   .option("--json", "emit the reading as JSON instead of rendered text")
   .option("--offline", "skip the LLM and return canned mystical drivel")
   .option("--method <id>", "divination method id", DEFAULT_METHOD_ID)
-  .action(async (source: string, opts: { json?: boolean; offline?: boolean; method: string }) => {
+  .option("--persona <id>", "narrator persona id (see `oracle personas`)")
+  .action(
+    async (
+      source: string,
+      opts: { json?: boolean; offline?: boolean; method: string; persona?: string },
+    ) => {
     const method = getMethod(opts.method);
     if (!method) {
       console.error(
@@ -44,11 +56,27 @@ program
       process.exit(2);
       return;
     }
+    if (opts.persona && !getPersona(opts.persona)) {
+      console.error(
+        `unknown persona: ${opts.persona}. try one of: ${listPersonas().map((p) => p.id).join(", ")}`,
+      );
+      process.exit(2);
+      return;
+    }
+    const persona = resolvePersona(opts.persona) ?? resolvePersona(DEFAULT_PERSONA_ID)!;
     const loaded = await loadDiff(source);
     const symbols = method.draw(loaded.diff);
     try {
-      const client = createLlmClient({ offline: opts.offline });
-      const messages = method.readingPrompt(symbols, loaded.diff);
+      const client = opts.offline
+        ? createOfflineClient(persona.offlineLines(symbols))
+        : createLlmClient({ offline: opts.offline });
+      let messages = method.readingPrompt(symbols, loaded.diff);
+      if (persona.systemPrompt.trim()) {
+        messages = [
+          ...messages,
+          { role: "system", content: `Persona — ${persona.name}: ${persona.systemPrompt}` },
+        ];
+      }
       const reading = await client.complete(messages);
       if (opts.json) {
         process.stdout.write(
@@ -57,6 +85,7 @@ program
               source: loaded.source,
               origin: loaded.origin,
               method: method.id,
+              persona: persona.id,
               channel: client.id,
               symbols,
               reading,
@@ -71,6 +100,7 @@ program
       process.stdout.write(
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
+          `   persona: ${persona.name}\n` +
           `   channel: ${client.id}\n\n${art}\n\n${reading}\n`,
       );
     } catch (err) {
@@ -113,6 +143,40 @@ program
     for (const m of methods) {
       const marker = m.id === DEFAULT_METHOD_ID ? "*" : " ";
       process.stdout.write(`${marker} ${m.id.padEnd(12)} ${m.name}\n      ${m.describe()}\n`);
+    }
+  });
+
+program
+  .command("personas")
+  .description("list available narrator personas")
+  .option("--json", "emit the persona list as JSON instead of rendered text")
+  .action((opts: { json?: boolean }) => {
+    const personas = listPersonas();
+    if (opts.json) {
+      process.stdout.write(
+        JSON.stringify(
+          {
+            default: DEFAULT_PERSONA_ID,
+            personas: personas.map((p) => ({
+              id: p.id,
+              name: p.name,
+              description: p.describe(),
+              default: p.id === DEFAULT_PERSONA_ID,
+            })),
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+      return;
+    }
+    if (personas.length === 0) {
+      process.stdout.write("no personas registered — the oracle has lost its voice.\n");
+      return;
+    }
+    for (const p of personas) {
+      const marker = p.id === DEFAULT_PERSONA_ID ? "*" : " ";
+      process.stdout.write(`${marker} ${p.id.padEnd(18)} ${p.name}\n      ${p.describe()}\n`);
     }
   });
 
