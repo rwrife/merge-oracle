@@ -19,6 +19,7 @@ import {
   readHookStatus,
   uninstallHook,
 } from "./bless.js";
+import { DEFAULT_BIG_PR_THRESHOLD, countDiffLoc, resolveSpread as resolveSpreadSelection } from "./spreads.js";
 
 const program = new Command();
 
@@ -43,10 +44,25 @@ program
   .option("--offline", "skip the LLM and return canned mystical drivel")
   .option("--method <id>", "divination method id", DEFAULT_METHOD_ID)
   .option("--persona <id>", "narrator persona id (see `oracle personas`)")
+  .option("--spread <id>", "force a specific spread (e.g. three-card, celtic-cross)")
+  .option(
+    "--big-pr-threshold <n>",
+    "LoC changed at which methods auto-upgrade to a richer spread",
+    String(
+      Number.parseInt(process.env.ORACLE_BIG_PR_THRESHOLD ?? "", 10) || DEFAULT_BIG_PR_THRESHOLD,
+    ),
+  )
   .action(
     async (
       source: string,
-      opts: { json?: boolean; offline?: boolean; method: string; persona?: string },
+      opts: {
+        json?: boolean;
+        offline?: boolean;
+        method: string;
+        persona?: string;
+        spread?: string;
+        bigPrThreshold: string;
+      },
     ) => {
     const method = getMethod(opts.method);
     if (!method) {
@@ -65,12 +81,39 @@ program
     }
     const persona = resolvePersona(opts.persona) ?? resolvePersona(DEFAULT_PERSONA_ID)!;
     const loaded = await loadDiff(source);
-    const symbols = method.draw(loaded.diff);
+    const threshold = Number.parseInt(opts.bigPrThreshold, 10);
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      console.error("--big-pr-threshold must be a non-negative integer");
+      process.exit(2);
+      return;
+    }
+    if (opts.spread && method.supportedSpreads) {
+      const ids = method.supportedSpreads.map((s) => s.id);
+      if (!ids.includes(opts.spread)) {
+        console.error(
+          `unknown spread for method '${method.id}': ${opts.spread}. try one of: ${ids.join(", ")}`,
+        );
+        process.exit(2);
+        return;
+      }
+    } else if (opts.spread && !method.supportedSpreads) {
+      console.error(`method '${method.id}' does not support alternate spreads`);
+      process.exit(2);
+      return;
+    }
+    const { spread, autoUpgraded } = resolveSpreadSelection({
+      supportedSpreads: method.supportedSpreads,
+      requested: opts.spread,
+      diff: loaded.diff,
+      threshold,
+    });
+    const callOpts = spread ? { spread } : undefined;
+    const symbols = method.draw(loaded.diff, callOpts);
     try {
       const client = opts.offline
         ? createOfflineClient(persona.offlineLines(symbols))
         : createLlmClient({ offline: opts.offline });
-      let messages = method.readingPrompt(symbols, loaded.diff);
+      let messages = method.readingPrompt(symbols, loaded.diff, callOpts);
       if (persona.systemPrompt.trim()) {
         messages = [
           ...messages,
@@ -87,6 +130,10 @@ program
               method: method.id,
               persona: persona.id,
               channel: client.id,
+              spread: spread ?? null,
+              spreadAutoUpgraded: autoUpgraded,
+              diffLoc: countDiffLoc(loaded.diff),
+              bigPrThreshold: threshold,
               symbols,
               reading,
             },
@@ -96,10 +143,14 @@ program
         );
         return;
       }
-      const art = method.render(symbols);
+      const art = method.render(symbols, callOpts);
+      const spreadLabel = spread
+        ? `   spread: ${spread}${autoUpgraded ? " (auto-upgraded: big PR)" : ""}\n`
+        : "";
       process.stdout.write(
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
+          spreadLabel +
           `   persona: ${persona.name}\n` +
           `   channel: ${client.id}\n\n${art}\n\n${reading}\n`,
       );
@@ -128,6 +179,14 @@ program
               name: m.name,
               description: m.describe(),
               default: m.id === DEFAULT_METHOD_ID,
+              supportedSpreads: m.supportedSpreads
+                ? m.supportedSpreads.map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    cards: s.cards,
+                    default: s.default === true,
+                  }))
+                : [],
             })),
           },
           null,
