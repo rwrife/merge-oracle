@@ -219,6 +219,21 @@ Methods are plain TypeScript files in `src/methods/`. The registry auto-discover
 
 Files starting with `_` and the shared `types.ts` are skipped by discovery.
 
+### Reading history (local SQLite)
+
+Every reading is auto-persisted to `~/.merge-oracle/history.sqlite` (override with `ORACLE_HISTORY_PATH`).
+Opt out per-invocation with `oracle read ... --no-history`, or globally with `ORACLE_HISTORY=0`.
+
+```bash
+oracle read https://github.com/rwrife/merge-oracle/pull/7  # writes reading #N
+oracle history                       # recent readings (filter with --repo/--method/--persona/--limit)
+oracle history show 7                # full rendered reading
+oracle history stats                 # per-method / per-persona outcome breakdown
+oracle verdict 7 --merged            # annotate the outcome (merged|closed|abandoned)
+```
+
+Each row records: timestamp, repo/PR (when inferable), diff sha256, method/persona/spread, drawn symbols, rendered text, and outcome. Schema versions upgrade in place on first run.
+
 ### LLM configuration (M3)
 The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:
 
