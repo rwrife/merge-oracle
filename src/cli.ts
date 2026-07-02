@@ -20,6 +20,13 @@ import {
   uninstallHook,
 } from "./bless.js";
 import { DEFAULT_BIG_PR_THRESHOLD, countDiffLoc, resolveSpread as resolveSpreadSelection } from "./spreads.js";
+import {
+  HistoryStore,
+  historyEnabledFromEnv,
+  renderHistoryDetail,
+  renderHistoryTable,
+  type Outcome,
+} from "./history.js";
 
 const program = new Command();
 
@@ -52,6 +59,7 @@ program
       Number.parseInt(process.env.ORACLE_BIG_PR_THRESHOLD ?? "", 10) || DEFAULT_BIG_PR_THRESHOLD,
     ),
   )
+  .option("--no-history", "do not persist this reading to the local history db")
   .action(
     async (
       source: string,
@@ -62,6 +70,7 @@ program
         persona?: string;
         spread?: string;
         bigPrThreshold: string;
+        history?: boolean;
       },
     ) => {
     const method = getMethod(opts.method);
@@ -121,6 +130,27 @@ program
         ];
       }
       const reading = await client.complete(messages);
+      let historyId: number | null = null;
+      const wantHistory = opts.history !== false && historyEnabledFromEnv();
+      if (wantHistory) {
+        try {
+          const store = new HistoryStore();
+          const row = store.insert({
+            loaded,
+            methodId: method.id,
+            personaId: persona.id,
+            spread: spread ?? null,
+            symbols,
+            reading,
+            channel: client.id,
+          });
+          historyId = row.id;
+          store.close();
+        } catch (err) {
+          // History is best-effort; never block a reading on it.
+          process.stderr.write(`⚠ history: ${(err as Error).message}\n`);
+        }
+      }
       if (opts.json) {
         process.stdout.write(
           JSON.stringify(
@@ -136,6 +166,7 @@ program
               bigPrThreshold: threshold,
               symbols,
               reading,
+              historyId,
             },
             null,
             2,
@@ -147,12 +178,15 @@ program
       const spreadLabel = spread
         ? `   spread: ${spread}${autoUpgraded ? " (auto-upgraded: big PR)" : ""}\n`
         : "";
+      const historyLabel = historyId != null ? `   history: #${historyId}\n` : "";
       process.stdout.write(
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
           spreadLabel +
           `   persona: ${persona.name}\n` +
-          `   channel: ${client.id}\n\n${art}\n\n${reading}\n`,
+          `   channel: ${client.id}\n` +
+          historyLabel +
+          `\n${art}\n\n${reading}\n`,
       );
     } catch (err) {
       if (err instanceof MissingApiKeyError) {
@@ -328,6 +362,120 @@ program
       if (verdict.severity >= threshold) process.exit(1);
       return;
     }
+  });
+
+const history = program.command("history").description("inspect past oracle readings stored locally");
+
+history
+  .command("list", { isDefault: true })
+  .description("list recent readings")
+  .option("--repo <owner/name>", "filter by repo")
+  .option("--method <id>", "filter by divination method")
+  .option("--persona <id>", "filter by persona")
+  .option("--limit <n>", "max rows to return", "20")
+  .option("--json", "emit as JSON")
+  .action((opts: { repo?: string; method?: string; persona?: string; limit: string; json?: boolean }) => {
+    const limit = Number.parseInt(opts.limit, 10);
+    if (!Number.isFinite(limit) || limit <= 0) {
+      console.error("--limit must be a positive integer");
+      process.exit(2);
+      return;
+    }
+    const store = new HistoryStore();
+    const rows = store.list({ repo: opts.repo, methodId: opts.method, personaId: opts.persona, limit });
+    if (opts.json) {
+      process.stdout.write(JSON.stringify(rows, null, 2) + "\n");
+    } else {
+      process.stdout.write(renderHistoryTable(rows));
+    }
+    store.close();
+  });
+
+history
+  .command("show")
+  .description("show the full rendered reading for a given id")
+  .argument("<id>", "reading id")
+  .option("--json", "emit as JSON")
+  .action((id: string, opts: { json?: boolean }) => {
+    const n = Number.parseInt(id, 10);
+    if (!Number.isFinite(n) || n <= 0) {
+      console.error("id must be a positive integer");
+      process.exit(2);
+      return;
+    }
+    const store = new HistoryStore();
+    const row = store.get(n);
+    if (!row) {
+      console.error(`no reading #${n}`);
+      store.close();
+      process.exit(1);
+      return;
+    }
+    if (opts.json) process.stdout.write(JSON.stringify(row, null, 2) + "\n");
+    else process.stdout.write(renderHistoryDetail(row));
+    store.close();
+  });
+
+history
+  .command("stats")
+  .description("summarize accuracy across methods and personas")
+  .option("--json", "emit as JSON")
+  .action((opts: { json?: boolean }) => {
+    const store = new HistoryStore();
+    const s = store.stats();
+    if (opts.json) {
+      process.stdout.write(JSON.stringify(s, null, 2) + "\n");
+      store.close();
+      return;
+    }
+    const lines: string[] = [];
+    lines.push(`total readings: ${s.total}`);
+    lines.push(`by outcome: ${Object.entries(s.byOutcome).map(([k, v]) => `${k}=${v}`).join(", ") || "(none)"}`);
+    lines.push("by method:");
+    for (const m of s.byMethod) {
+      lines.push(`  ${m.methodId.padEnd(12)} total=${m.total} merged=${m.merged} closed=${m.closed} abandoned=${m.abandoned} pending=${m.pending}`);
+    }
+    lines.push("by persona:");
+    for (const p of s.byPersona) {
+      lines.push(`  ${p.personaId.padEnd(18)} total=${p.total} merged=${p.merged} closed=${p.closed} abandoned=${p.abandoned} pending=${p.pending}`);
+    }
+    process.stdout.write(lines.join("\n") + "\n");
+    store.close();
+  });
+
+program
+  .command("verdict")
+  .description("annotate a reading with its real-world outcome")
+  .argument("<id>", "reading id")
+  .option("--merged", "the PR was merged")
+  .option("--closed", "the PR was closed unmerged")
+  .option("--abandoned", "the branch was abandoned")
+  .option("--json", "emit as JSON")
+  .action((id: string, opts: { merged?: boolean; closed?: boolean; abandoned?: boolean; json?: boolean }) => {
+    const n = Number.parseInt(id, 10);
+    if (!Number.isFinite(n) || n <= 0) {
+      console.error("id must be a positive integer");
+      process.exit(2);
+      return;
+    }
+    const flags = [opts.merged, opts.closed, opts.abandoned].filter(Boolean).length;
+    if (flags !== 1) {
+      console.error("pick exactly one of --merged, --closed, --abandoned");
+      process.exit(2);
+      return;
+    }
+    const outcome: Outcome = opts.merged ? "merged" : opts.closed ? "closed" : "abandoned";
+    const store = new HistoryStore();
+    const row = store.setOutcome(n, outcome);
+    if (!row) {
+      console.error(`no reading #${n}`);
+      store.close();
+      process.exit(1);
+      return;
+    }
+    if (opts.json) process.stdout.write(JSON.stringify(row, null, 2) + "\n");
+    else process.stdout.write(`✓ reading #${row.id} marked as ${row.outcome} (at ${row.outcomeAt})\n`);
+    store.close();
   });
 
 program
