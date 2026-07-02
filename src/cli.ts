@@ -27,6 +27,15 @@ import {
   renderHistoryTable,
   type Outcome,
 } from "./history.js";
+import {
+  DEFAULT_PNG_THEME,
+  PNG_THEMES,
+  isPngTheme,
+  parsePngSize,
+  renderCardPng,
+  type PngThemeId,
+} from "./render/png.js";
+import { writeFileSync } from "node:fs";
 
 const program = new Command();
 
@@ -60,6 +69,19 @@ program
     ),
   )
   .option("--no-history", "do not persist this reading to the local history db")
+  .option(
+    "--png <path>",
+    "also write the reading as a shareable PNG card to <path> (use '-' for stdout)",
+  )
+  .option(
+    "--png-theme <id>",
+    `PNG theme: ${PNG_THEMES.join("|")}`,
+    DEFAULT_PNG_THEME,
+  )
+  .option(
+    "--png-size <WxH>",
+    "PNG dimensions, e.g. 1200x630 (default) or 1600x840",
+  )
   .action(
     async (
       source: string,
@@ -71,6 +93,9 @@ program
         spread?: string;
         bigPrThreshold: string;
         history?: boolean;
+        png?: string;
+        pngTheme: string;
+        pngSize?: string;
       },
     ) => {
     const method = getMethod(opts.method);
@@ -95,6 +120,26 @@ program
       console.error("--big-pr-threshold must be a non-negative integer");
       process.exit(2);
       return;
+    }
+    // Validate PNG flags early so we don't burn an LLM call on a typo.
+    let pngSize: { width: number; height: number } | undefined;
+    if (opts.png != null) {
+      if (!isPngTheme(opts.pngTheme)) {
+        console.error(
+          `unknown --png-theme: ${opts.pngTheme}. try one of: ${PNG_THEMES.join(", ")}`,
+        );
+        process.exit(2);
+        return;
+      }
+      if (opts.pngSize) {
+        try {
+          pngSize = parsePngSize(opts.pngSize);
+        } catch (err) {
+          console.error((err as Error).message);
+          process.exit(2);
+          return;
+        }
+      }
     }
     if (opts.spread && method.supportedSpreads) {
       const ids = method.supportedSpreads.map((s) => s.id);
@@ -151,6 +196,48 @@ program
           process.stderr.write(`⚠ history: ${(err as Error).message}\n`);
         }
       }
+      // Optional PNG export happens after the reading is finalized but before
+      // we emit text/JSON, so we can echo the resulting path into --json output.
+      let pngResult: { path: string; theme: string; width: number; height: number } | null = null;
+      if (opts.png != null) {
+        const card = {
+          methodName: method.name,
+          personaName: persona.name,
+          spread: spread ?? null,
+          symbols,
+          reading,
+          diff: loaded.diff,
+          repoRef:
+            loaded.source === "github"
+              ? loaded.origin
+              : loaded.source === "file"
+                ? loaded.origin
+                : "stdin",
+          channel: client.id,
+        };
+        const rendered = await renderCardPng(card, {
+          theme: opts.pngTheme as PngThemeId,
+          width: pngSize?.width,
+          height: pngSize?.height,
+        });
+        if (opts.png === "-") {
+          process.stdout.write(rendered.buffer);
+          pngResult = {
+            path: "-",
+            theme: rendered.theme,
+            width: rendered.width,
+            height: rendered.height,
+          };
+        } else {
+          writeFileSync(opts.png, rendered.buffer);
+          pngResult = {
+            path: opts.png,
+            theme: rendered.theme,
+            width: rendered.width,
+            height: rendered.height,
+          };
+        }
+      }
       if (opts.json) {
         process.stdout.write(
           JSON.stringify(
@@ -167,6 +254,7 @@ program
               symbols,
               reading,
               historyId,
+              png: pngResult,
             },
             null,
             2,
@@ -179,6 +267,12 @@ program
         ? `   spread: ${spread}${autoUpgraded ? " (auto-upgraded: big PR)" : ""}\n`
         : "";
       const historyLabel = historyId != null ? `   history: #${historyId}\n` : "";
+      const pngLabel =
+        pngResult && pngResult.path !== "-"
+          ? `   png: ${pngResult.path} (${pngResult.width}x${pngResult.height}, ${pngResult.theme})\n`
+          : "";
+      // When --png=-, the PNG bytes were already written to stdout; skip the text card.
+      if (pngResult && pngResult.path === "-") return;
       process.stdout.write(
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
@@ -186,6 +280,7 @@ program
           `   persona: ${persona.name}\n` +
           `   channel: ${client.id}\n` +
           historyLabel +
+          pngLabel +
           `\n${art}\n\n${reading}\n`,
       );
     } catch (err) {

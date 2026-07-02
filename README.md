@@ -234,6 +234,28 @@ oracle verdict 7 --merged            # annotate the outcome (merged|closed|aband
 
 Each row records: timestamp, repo/PR (when inferable), diff sha256, method/persona/spread, drawn symbols, rendered text, and outcome. Schema versions upgrade in place on first run.
 
+### Shareable reading cards (PNG export)
+
+Readings are screenshot bait, but terminal screenshots look ugly across themes. `--png` renders the reading as an OpenGraph-friendly PNG you can drop straight into Twitter/Bluesky/Slack.
+
+```bash
+oracle read ./feature.diff --png=./card.png                    # dark, 1200x630 (default)
+oracle read ./feature.diff --png=./card.png --png-theme=light
+oracle read ./feature.diff --png=./card.png --png-theme=parchment --png-size=1600x840
+oracle read ./feature.diff --offline --png=./card.png          # works offline
+gh pr diff 42 | oracle read - --png=- > card.png               # `--png=-` streams PNG bytes to stdout
+```
+
+Flags:
+
+- `--png <path>` — also write the reading as a PNG card. Use `-` for stdout (in which case the usual text card is suppressed).
+- `--png-theme <id>` — `dark` (default), `light`, or `parchment`.
+- `--png-size <WxH>` — override dimensions, e.g. `1200x630` (default), `1600x840`, `800x800`. Bounded to `[200, 4096]` per axis.
+
+Cards are rendered with [satori](https://github.com/vercel/satori) (JSX → SVG) and [sharp](https://sharp.pixelplumbing.com/) (SVG → PNG). The bundled Inter font (OFL, `src/data/fonts/`) means no network calls are needed at render time; offline mode produces the same layout as a live reading.
+
+![example reading card](docs/reading-card-dark.png)
+
 ### LLM configuration (M3)
 The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:
 

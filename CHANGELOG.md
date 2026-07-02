@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Shareable reading cards: `oracle read --png=<path>` renders the reading as a 1200x630 PNG via satori + sharp, with `--png-theme=dark|light|parchment` and `--png-size=WxH` (bounded 200–4096). `--png=-` streams PNG bytes to stdout. Ships a bundled Inter (OFL) font under `src/data/fonts/` so rendering works fully offline. (#30)
 - GitHub Action: composite `rwrife/merge-oracle@v1` action that installs the CLI, fetches the PR diff via `gh`, runs `oracle read`, and posts the reading as a **sticky** PR comment (updated in place on every push). Configurable `method`, `offline`, `version`, and OpenAI env passthrough. Example workflow shipped under `examples/workflow.yml`. (#10)
 - MCP server mode: `oracle mcp` runs a stdio MCP server exposing `oracle.read` and `oracle.methods` as tools so Claude/Cursor/Codex can summon readings inline. (#9)
 - `i-ching` divination method: hashes the diff into a six-line hexagram cast under traditional yarrow-stalk probabilities; changing lines transform a Primary hexagram into a Derived one, read as the merge prophecy. (#8)
