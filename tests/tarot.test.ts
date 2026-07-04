@@ -20,7 +20,7 @@ describe("methods/registry", () => {
   });
 
   it("returns undefined for unknown methods", () => {
-    expect(getMethod("astrology")).toBeUndefined();
+    expect(getMethod("cartomancy")).toBeUndefined();
   });
 });
 

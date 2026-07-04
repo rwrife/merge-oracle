@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `astrology` divination method: casts a three-sign natal chart for the PR — **Sun** from the diff's creation timestamp (`Date:` header when present, hash-synthesized otherwise), **Moon** from the author's birthday (`git config user.birthday`, `YYYY-MM-DD` or `MM-DD`; synthesized deterministically when absent), and **Rising** from the base branch + repo name. Element, modality, and ruling planet are woven into the reading; synthesized natal dates are disclosed in a `— chart cast from synthesized natal date` footer. Ships a 12-sign zodiac deck under `src/data/decks/zodiac.json`. (#34)
 - Shareable reading cards: `oracle read --png=<path>` renders the reading as a 1200x630 PNG via satori + sharp, with `--png-theme=dark|light|parchment` and `--png-size=WxH` (bounded 200–4096). `--png=-` streams PNG bytes to stdout. Ships a bundled Inter (OFL) font under `src/data/fonts/` so rendering works fully offline. (#30)
 - GitHub Action: composite `rwrife/merge-oracle@v1` action that installs the CLI, fetches the PR diff via `gh`, runs `oracle read`, and posts the reading as a **sticky** PR comment (updated in place on every push). Configurable `method`, `offline`, `version`, and OpenAI env passthrough. Example workflow shipped under `examples/workflow.yml`. (#10)
 - MCP server mode: `oracle mcp` runs a stdio MCP server exposing `oracle.read` and `oracle.methods` as tools so Claude/Cursor/Codex can summon readings inline. (#9)
