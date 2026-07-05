@@ -1,14 +1,177 @@
-[
-  { "id": "aries",       "glyph": "♈", "name": "Aries",       "element": "fire",  "modality": "cardinal", "ruler": "Mars",    "keywords": ["initiative", "spark", "impulse"],       "delineation": "bold opening move; the diff plants a flag and dares reviewers to keep up." },
-  { "id": "taurus",      "glyph": "♉", "name": "Taurus",      "element": "earth", "modality": "fixed",    "ruler": "Venus",   "keywords": ["stability", "endurance", "craft"],      "delineation": "load-bearing work laid brick by brick; slow, deliberate, hard to move once merged." },
-  { "id": "gemini",      "glyph": "♊", "name": "Gemini",      "element": "air",   "modality": "mutable",  "ruler": "Mercury", "keywords": ["duality", "chatter", "wiring"],         "delineation": "a talkative diff full of small threads; expect many review comments and clarifying replies." },
-  { "id": "cancer",      "glyph": "♋", "name": "Cancer",      "element": "water", "modality": "cardinal", "ruler": "Moon",    "keywords": ["shelter", "memory", "tests"],           "delineation": "protective, home-tending work; touches stateful surfaces and asks for careful review." },
-  { "id": "leo",         "glyph": "♌", "name": "Leo",         "element": "fire",  "modality": "fixed",    "ruler": "Sun",     "keywords": ["performance", "showcase", "release"],   "delineation": "an author-forward change meant to be seen; a demoable feature or a headline refactor." },
-  { "id": "virgo",       "glyph": "♍", "name": "Virgo",       "element": "earth", "modality": "mutable",  "ruler": "Mercury", "keywords": ["cleanup", "lint", "precision"],         "delineation": "meticulous tidying; small tweaks with outsized cumulative effect on the codebase's hygiene." },
-  { "id": "libra",       "glyph": "♎", "name": "Libra",       "element": "air",   "modality": "cardinal", "ruler": "Venus",   "keywords": ["balance", "review", "diplomacy"],       "delineation": "a diff seeking consensus; the author wants a co-signer more than a rubber stamp." },
-  { "id": "scorpio",     "glyph": "♏", "name": "Scorpio",     "element": "water", "modality": "fixed",    "ruler": "Pluto",   "keywords": ["surgery", "secrets", "depth"],          "delineation": "cuts into load-bearing internals; hidden implications lurk beneath the surface hunks." },
-  { "id": "sagittarius", "glyph": "♐", "name": "Sagittarius", "element": "fire",  "modality": "mutable",  "ruler": "Jupiter", "keywords": ["exploration", "spike", "prototype"],    "delineation": "an ambitious arc that ranges wide; may overshoot scope but points the codebase somewhere new." },
-  { "id": "capricorn",   "glyph": "♑", "name": "Capricorn",   "element": "earth", "modality": "cardinal", "ruler": "Saturn",  "keywords": ["discipline", "release", "gate"],        "delineation": "structural, gatekeeping work; the sort of change that ships a milestone or hardens a boundary." },
-  { "id": "aquarius",    "glyph": "♒", "name": "Aquarius",    "element": "air",   "modality": "fixed",    "ruler": "Uranus",  "keywords": ["reinvention", "protocol", "abstraction"], "delineation": "unconventional rewiring; introduces a new abstraction or breaks a familiar pattern for a reason." },
-  { "id": "pisces",      "glyph": "♓", "name": "Pisces",      "element": "water", "modality": "mutable",  "ruler": "Neptune", "keywords": ["intuition", "vibes", "polish"],         "delineation": "soft, atmospheric changes; UX, copy, and edges — hard to measure, easy to feel." }
-]
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "zodiac",
+  "name": "Western Zodiac (12 signs)",
+  "method": "astrology",
+  "version": 1,
+  "cards": [
+    {
+      "id": "aries",
+      "glyph": "♈",
+      "name": "Aries",
+      "element": "fire",
+      "modality": "cardinal",
+      "ruler": "Mars",
+      "keywords": [
+        "initiative",
+        "spark",
+        "impulse"
+      ],
+      "delineation": "bold opening move; the diff plants a flag and dares reviewers to keep up."
+    },
+    {
+      "id": "taurus",
+      "glyph": "♉",
+      "name": "Taurus",
+      "element": "earth",
+      "modality": "fixed",
+      "ruler": "Venus",
+      "keywords": [
+        "stability",
+        "endurance",
+        "craft"
+      ],
+      "delineation": "load-bearing work laid brick by brick; slow, deliberate, hard to move once merged."
+    },
+    {
+      "id": "gemini",
+      "glyph": "♊",
+      "name": "Gemini",
+      "element": "air",
+      "modality": "mutable",
+      "ruler": "Mercury",
+      "keywords": [
+        "duality",
+        "chatter",
+        "wiring"
+      ],
+      "delineation": "a talkative diff full of small threads; expect many review comments and clarifying replies."
+    },
+    {
+      "id": "cancer",
+      "glyph": "♋",
+      "name": "Cancer",
+      "element": "water",
+      "modality": "cardinal",
+      "ruler": "Moon",
+      "keywords": [
+        "shelter",
+        "memory",
+        "tests"
+      ],
+      "delineation": "protective, home-tending work; touches stateful surfaces and asks for careful review."
+    },
+    {
+      "id": "leo",
+      "glyph": "♌",
+      "name": "Leo",
+      "element": "fire",
+      "modality": "fixed",
+      "ruler": "Sun",
+      "keywords": [
+        "performance",
+        "showcase",
+        "release"
+      ],
+      "delineation": "an author-forward change meant to be seen; a demoable feature or a headline refactor."
+    },
+    {
+      "id": "virgo",
+      "glyph": "♍",
+      "name": "Virgo",
+      "element": "earth",
+      "modality": "mutable",
+      "ruler": "Mercury",
+      "keywords": [
+        "cleanup",
+        "lint",
+        "precision"
+      ],
+      "delineation": "meticulous tidying; small tweaks with outsized cumulative effect on the codebase's hygiene."
+    },
+    {
+      "id": "libra",
+      "glyph": "♎",
+      "name": "Libra",
+      "element": "air",
+      "modality": "cardinal",
+      "ruler": "Venus",
+      "keywords": [
+        "balance",
+        "review",
+        "diplomacy"
+      ],
+      "delineation": "a diff seeking consensus; the author wants a co-signer more than a rubber stamp."
+    },
+    {
+      "id": "scorpio",
+      "glyph": "♏",
+      "name": "Scorpio",
+      "element": "water",
+      "modality": "fixed",
+      "ruler": "Pluto",
+      "keywords": [
+        "surgery",
+        "secrets",
+        "depth"
+      ],
+      "delineation": "cuts into load-bearing internals; hidden implications lurk beneath the surface hunks."
+    },
+    {
+      "id": "sagittarius",
+      "glyph": "♐",
+      "name": "Sagittarius",
+      "element": "fire",
+      "modality": "mutable",
+      "ruler": "Jupiter",
+      "keywords": [
+        "exploration",
+        "spike",
+        "prototype"
+      ],
+      "delineation": "an ambitious arc that ranges wide; may overshoot scope but points the codebase somewhere new."
+    },
+    {
+      "id": "capricorn",
+      "glyph": "♑",
+      "name": "Capricorn",
+      "element": "earth",
+      "modality": "cardinal",
+      "ruler": "Saturn",
+      "keywords": [
+        "discipline",
+        "release",
+        "gate"
+      ],
+      "delineation": "structural, gatekeeping work; the sort of change that ships a milestone or hardens a boundary."
+    },
+    {
+      "id": "aquarius",
+      "glyph": "♒",
+      "name": "Aquarius",
+      "element": "air",
+      "modality": "fixed",
+      "ruler": "Uranus",
+      "keywords": [
+        "reinvention",
+        "protocol",
+        "abstraction"
+      ],
+      "delineation": "unconventional rewiring; introduces a new abstraction or breaks a familiar pattern for a reason."
+    },
+    {
+      "id": "pisces",
+      "glyph": "♓",
+      "name": "Pisces",
+      "element": "water",
+      "modality": "mutable",
+      "ruler": "Neptune",
+      "keywords": [
+        "intuition",
+        "vibes",
+        "polish"
+      ],
+      "delineation": "soft, atmospheric changes; UX, copy, and edges — hard to measure, easy to feel."
+    }
+  ]
+}

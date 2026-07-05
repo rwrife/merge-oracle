@@ -1,24 +1,251 @@
-[
-  { "id": 0,  "name": "The Fool",            "keywords": ["beginnings", "leap", "naivety"],            "upright": "a fresh branch leaps without looking; the journey begins.", "reversed": "recklessness; a leap into untested waters." },
-  { "id": 1,  "name": "The Magician",        "keywords": ["skill", "intent", "manifestation"],         "upright": "tools aligned; the author bends the diff to their will.",   "reversed": "trickery; clever code that hides its purpose." },
-  { "id": 2,  "name": "The High Priestess",  "keywords": ["intuition", "secrets", "subconscious"],      "upright": "hidden knowledge in the codebase whispers approval.",      "reversed": "secrets withheld; documentation conceals more than it reveals." },
-  { "id": 3,  "name": "The Empress",         "keywords": ["abundance", "growth", "creation"],           "upright": "the diff births new features in fertile soil.",            "reversed": "feature bloat; growth without root." },
-  { "id": 4,  "name": "The Emperor",         "keywords": ["structure", "authority", "discipline"],      "upright": "architecture holds; the lint gods are appeased.",          "reversed": "rigid abstractions strangle the change." },
-  { "id": 5,  "name": "The Hierophant",      "keywords": ["tradition", "convention", "doctrine"],       "upright": "convention honored; the style guide nods.",                "reversed": "heresy against the established patterns." },
-  { "id": 6,  "name": "The Lovers",          "keywords": ["choice", "alignment", "partnership"],        "upright": "two modules meet in harmony; an integration blessed.",     "reversed": "coupling without consent; tangled dependencies." },
-  { "id": 7,  "name": "The Chariot",         "keywords": ["momentum", "victory", "control"],            "upright": "the change races forward; CI yields its laurel.",          "reversed": "velocity without direction; a runaway refactor." },
-  { "id": 8,  "name": "Strength",            "keywords": ["resilience", "patience", "courage"],         "upright": "the suite endures the new load with grace.",               "reversed": "fragile resolve; a single edge case shatters all." },
-  { "id": 9,  "name": "The Hermit",          "keywords": ["solitude", "introspection", "guidance"],     "upright": "a quiet refactor lit by a single lamp.",                   "reversed": "isolation; this PR has not seen another set of eyes." },
-  { "id": 10, "name": "Wheel of Fortune",    "keywords": ["change", "cycles", "fate"],                  "upright": "the wheel turns; flaky tests may finally pass.",           "reversed": "regression returns; what was fixed is broken anew." },
-  { "id": 11, "name": "Justice",             "keywords": ["truth", "fairness", "consequence"],          "upright": "the diff is balanced; tests match implementation.",        "reversed": "unbalanced trade-offs; technical debt is being levied." },
-  { "id": 12, "name": "The Hanged Man",      "keywords": ["pause", "perspective", "sacrifice"],         "upright": "a deliberate pause; a bold inversion of approach.",        "reversed": "stalled work; this PR is suspended needlessly." },
-  { "id": 13, "name": "Death",               "keywords": ["endings", "transformation", "release"],      "upright": "old code dies so a cleaner form may rise.",                "reversed": "an ending resisted; deprecated code clings on." },
-  { "id": 14, "name": "Temperance",          "keywords": ["balance", "moderation", "patience"],         "upright": "old and new are blended with care.",                       "reversed": "over-correction; a swing too far from the previous design." },
-  { "id": 15, "name": "The Devil",           "keywords": ["bondage", "shadow", "temptation"],           "upright": "a quick hack chains future maintainers.",                  "reversed": "release; an old shortcut is finally severed." },
-  { "id": 16, "name": "The Tower",           "keywords": ["upheaval", "revelation", "collapse"],        "upright": "a load-bearing assumption topples — beware.",              "reversed": "narrowly avoided collapse; a near-miss outage." },
-  { "id": 17, "name": "The Star",            "keywords": ["hope", "clarity", "renewal"],                "upright": "clear intent shines; reviewers will trust this work.",     "reversed": "false hope; the patch only appears to fix the issue." },
-  { "id": 18, "name": "The Moon",            "keywords": ["illusion", "uncertainty", "anxiety"],        "upright": "shadows in the diff — something is not what it seems.",    "reversed": "confusion lifts; a hidden bug surfaces and is named." },
-  { "id": 19, "name": "The Sun",             "keywords": ["clarity", "joy", "success"],                 "upright": "the build is green; the path forward shines.",             "reversed": "false dawn; green CI hides a brittle truth." },
-  { "id": 20, "name": "Judgement",           "keywords": ["reckoning", "awakening", "review"],          "upright": "the reviewer is roused; a verdict approaches.",            "reversed": "reckoning postponed; this PR will linger in queue." },
-  { "id": 21, "name": "The World",           "keywords": ["completion", "wholeness", "release"],        "upright": "the cycle closes; this change is ready to ship.",          "reversed": "almost done — one loose thread keeps the world from turning." }
-]
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "major-arcana",
+  "name": "Major Arcana (Rider-Waite-ish)",
+  "method": "tarot",
+  "version": 1,
+  "cards": [
+    {
+      "id": 0,
+      "name": "The Fool",
+      "keywords": [
+        "beginnings",
+        "leap",
+        "naivety"
+      ],
+      "upright": "a fresh branch leaps without looking; the journey begins.",
+      "reversed": "recklessness; a leap into untested waters."
+    },
+    {
+      "id": 1,
+      "name": "The Magician",
+      "keywords": [
+        "skill",
+        "intent",
+        "manifestation"
+      ],
+      "upright": "tools aligned; the author bends the diff to their will.",
+      "reversed": "trickery; clever code that hides its purpose."
+    },
+    {
+      "id": 2,
+      "name": "The High Priestess",
+      "keywords": [
+        "intuition",
+        "secrets",
+        "subconscious"
+      ],
+      "upright": "hidden knowledge in the codebase whispers approval.",
+      "reversed": "secrets withheld; documentation conceals more than it reveals."
+    },
+    {
+      "id": 3,
+      "name": "The Empress",
+      "keywords": [
+        "abundance",
+        "growth",
+        "creation"
+      ],
+      "upright": "the diff births new features in fertile soil.",
+      "reversed": "feature bloat; growth without root."
+    },
+    {
+      "id": 4,
+      "name": "The Emperor",
+      "keywords": [
+        "structure",
+        "authority",
+        "discipline"
+      ],
+      "upright": "architecture holds; the lint gods are appeased.",
+      "reversed": "rigid abstractions strangle the change."
+    },
+    {
+      "id": 5,
+      "name": "The Hierophant",
+      "keywords": [
+        "tradition",
+        "convention",
+        "doctrine"
+      ],
+      "upright": "convention honored; the style guide nods.",
+      "reversed": "heresy against the established patterns."
+    },
+    {
+      "id": 6,
+      "name": "The Lovers",
+      "keywords": [
+        "choice",
+        "alignment",
+        "partnership"
+      ],
+      "upright": "two modules meet in harmony; an integration blessed.",
+      "reversed": "coupling without consent; tangled dependencies."
+    },
+    {
+      "id": 7,
+      "name": "The Chariot",
+      "keywords": [
+        "momentum",
+        "victory",
+        "control"
+      ],
+      "upright": "the change races forward; CI yields its laurel.",
+      "reversed": "velocity without direction; a runaway refactor."
+    },
+    {
+      "id": 8,
+      "name": "Strength",
+      "keywords": [
+        "resilience",
+        "patience",
+        "courage"
+      ],
+      "upright": "the suite endures the new load with grace.",
+      "reversed": "fragile resolve; a single edge case shatters all."
+    },
+    {
+      "id": 9,
+      "name": "The Hermit",
+      "keywords": [
+        "solitude",
+        "introspection",
+        "guidance"
+      ],
+      "upright": "a quiet refactor lit by a single lamp.",
+      "reversed": "isolation; this PR has not seen another set of eyes."
+    },
+    {
+      "id": 10,
+      "name": "Wheel of Fortune",
+      "keywords": [
+        "change",
+        "cycles",
+        "fate"
+      ],
+      "upright": "the wheel turns; flaky tests may finally pass.",
+      "reversed": "regression returns; what was fixed is broken anew."
+    },
+    {
+      "id": 11,
+      "name": "Justice",
+      "keywords": [
+        "truth",
+        "fairness",
+        "consequence"
+      ],
+      "upright": "the diff is balanced; tests match implementation.",
+      "reversed": "unbalanced trade-offs; technical debt is being levied."
+    },
+    {
+      "id": 12,
+      "name": "The Hanged Man",
+      "keywords": [
+        "pause",
+        "perspective",
+        "sacrifice"
+      ],
+      "upright": "a deliberate pause; a bold inversion of approach.",
+      "reversed": "stalled work; this PR is suspended needlessly."
+    },
+    {
+      "id": 13,
+      "name": "Death",
+      "keywords": [
+        "endings",
+        "transformation",
+        "release"
+      ],
+      "upright": "old code dies so a cleaner form may rise.",
+      "reversed": "an ending resisted; deprecated code clings on."
+    },
+    {
+      "id": 14,
+      "name": "Temperance",
+      "keywords": [
+        "balance",
+        "moderation",
+        "patience"
+      ],
+      "upright": "old and new are blended with care.",
+      "reversed": "over-correction; a swing too far from the previous design."
+    },
+    {
+      "id": 15,
+      "name": "The Devil",
+      "keywords": [
+        "bondage",
+        "shadow",
+        "temptation"
+      ],
+      "upright": "a quick hack chains future maintainers.",
+      "reversed": "release; an old shortcut is finally severed."
+    },
+    {
+      "id": 16,
+      "name": "The Tower",
+      "keywords": [
+        "upheaval",
+        "revelation",
+        "collapse"
+      ],
+      "upright": "a load-bearing assumption topples — beware.",
+      "reversed": "narrowly avoided collapse; a near-miss outage."
+    },
+    {
+      "id": 17,
+      "name": "The Star",
+      "keywords": [
+        "hope",
+        "clarity",
+        "renewal"
+      ],
+      "upright": "clear intent shines; reviewers will trust this work.",
+      "reversed": "false hope; the patch only appears to fix the issue."
+    },
+    {
+      "id": 18,
+      "name": "The Moon",
+      "keywords": [
+        "illusion",
+        "uncertainty",
+        "anxiety"
+      ],
+      "upright": "shadows in the diff — something is not what it seems.",
+      "reversed": "confusion lifts; a hidden bug surfaces and is named."
+    },
+    {
+      "id": 19,
+      "name": "The Sun",
+      "keywords": [
+        "clarity",
+        "joy",
+        "success"
+      ],
+      "upright": "the build is green; the path forward shines.",
+      "reversed": "false dawn; green CI hides a brittle truth."
+    },
+    {
+      "id": 20,
+      "name": "Judgement",
+      "keywords": [
+        "reckoning",
+        "awakening",
+        "review"
+      ],
+      "upright": "the reviewer is roused; a verdict approaches.",
+      "reversed": "reckoning postponed; this PR will linger in queue."
+    },
+    {
+      "id": 21,
+      "name": "The World",
+      "keywords": [
+        "completion",
+        "wholeness",
+        "release"
+      ],
+      "upright": "the cycle closes; this change is ready to ship.",
+      "reversed": "almost done — one loose thread keeps the world from turning."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "office-runes",
+  "name": "Office Runes (6 workplace glyphs)",
+  "method": "runes",
+  "version": 1,
+  "cards": [
+    {
+      "id": "standup",
+      "glyph": "⏱",
+      "name": "Standup",
+      "keywords": ["cadence", "check-in"],
+      "upright": "the team knows what you shipped; the PR arrives with context.",
+      "reversed": "silent drift; a change lands with no forewarning and reviewers scramble."
+    },
+    {
+      "id": "code-review",
+      "glyph": "👀",
+      "name": "Code Review",
+      "keywords": ["scrutiny", "eyes"],
+      "upright": "a careful set of eyes; the diff sharpens under attention.",
+      "reversed": "bikeshedding; reviewers argue color while the roof leaks."
+    },
+    {
+      "id": "friday-deploy",
+      "glyph": "🌆",
+      "name": "Friday Deploy",
+      "keywords": ["risk", "weekend"],
+      "upright": "confidence born of tests and reversibility; the ship goes calmly.",
+      "reversed": "you know exactly why this is bad. do it Monday."
+    },
+    {
+      "id": "coffee",
+      "glyph": "☕",
+      "name": "Coffee",
+      "keywords": ["focus", "ritual"],
+      "upright": "the author is caffeinated and clear-eyed; edge cases are named.",
+      "reversed": "over-brewed jitters; refactors sprawl beyond the ticket."
+    },
+    {
+      "id": "on-call",
+      "glyph": "📟",
+      "name": "On-Call",
+      "keywords": ["duty", "readiness"],
+      "upright": "the change ships with a runbook; the pager sleeps.",
+      "reversed": "the alert queue senses fresh code and stirs."
+    },
+    {
+      "id": "retrospective",
+      "glyph": "📓",
+      "name": "Retrospective",
+      "keywords": ["learning", "loop"],
+      "upright": "past failures inform this diff; the codebase grows wiser.",
+      "reversed": "the same mistake, again; muscle memory over reflection."
+    }
+  ]
+}

@@ -1,26 +1,297 @@
-[
-  { "id": "fehu",     "glyph": "ᚠ", "name": "Fehu",     "keywords": ["wealth", "reward", "cattle"],         "upright": "the diff brings tangible value; the merchant's bell rings.",        "reversed": "loss; effort spent without harvest." },
-  { "id": "uruz",     "glyph": "ᚢ", "name": "Uruz",     "keywords": ["strength", "vitality", "wild ox"],    "upright": "raw refactoring strength; the codebase grows muscle.",              "reversed": "brute force where finesse was needed." },
-  { "id": "thurisaz", "glyph": "ᚦ", "name": "Thurisaz", "keywords": ["thorn", "conflict", "defense"],       "upright": "a guardian thorn against bugs; defensive coding triumphs.",         "reversed": "a sharp edge turned inward; self-inflicted wounds in the logic." },
-  { "id": "ansuz",    "glyph": "ᚨ", "name": "Ansuz",    "keywords": ["message", "signal", "wisdom"],        "upright": "the commit message rings clear; the reviewers hear and nod.",       "reversed": "miscommunication; the PR description hides the truth." },
-  { "id": "raidho",   "glyph": "ᚱ", "name": "Raidho",   "keywords": ["journey", "rhythm", "wheel"],         "upright": "the change moves along the right path; CI hums in cadence.",        "reversed": "a detour through rebases; the journey lengthens." },
-  { "id": "kenaz",    "glyph": "ᚲ", "name": "Kenaz",    "keywords": ["torch", "insight", "craft"],          "upright": "illumination — a hidden pattern revealed to the craftsman.",        "reversed": "a sputtering torch; understanding falters mid-review." },
-  { "id": "gebo",     "glyph": "ᚷ", "name": "Gebo",     "keywords": ["gift", "exchange", "partnership"],    "upright": "a generous PR; pair-programming spirits smile.",                    "reversed": "imbalance; one author labors while others reap." },
-  { "id": "wunjo",    "glyph": "ᚹ", "name": "Wunjo",    "keywords": ["joy", "harmony", "fellowship"],       "upright": "the team rejoices; review threads close with thumbs-up.",           "reversed": "discord in the channel; bikeshedding looms." },
-  { "id": "hagalaz",  "glyph": "ᚺ", "name": "Hagalaz",  "keywords": ["hail", "disruption", "uncontrolled"], "upright": "a sudden storm of failing tests; nature's audit.",                  "reversed": "lingering damage; flakes that refuse to thaw." },
-  { "id": "nauthiz",  "glyph": "ᚾ", "name": "Nauthiz",  "keywords": ["need", "constraint", "friction"],     "upright": "the constraint forges the design; necessity sharpens the diff.",    "reversed": "starvation of resources; the build runs out of memory." },
-  { "id": "isa",      "glyph": "ᛁ", "name": "Isa",      "keywords": ["ice", "stillness", "stasis"],         "upright": "freeze the branch; pause before pushing further.",                  "reversed": "a thaw begins; the deadlock breaks." },
-  { "id": "jera",     "glyph": "ᛃ", "name": "Jera",     "keywords": ["harvest", "cycle", "reward"],         "upright": "the slow seeds of past commits ripen in this merge.",               "reversed": "an early harvest; the feature ships before it is ready." },
-  { "id": "eihwaz",   "glyph": "ᛇ", "name": "Eihwaz",   "keywords": ["yew", "endurance", "axis"],           "upright": "the architecture holds; deep roots steady the new branch.",         "reversed": "a brittle support; the load-bearing module groans." },
-  { "id": "perthro",  "glyph": "ᛈ", "name": "Perthro",  "keywords": ["mystery", "lot", "fate"],             "upright": "the unknown unknowns; an edge case waits to be cast.",              "reversed": "secrets hoarded; a flaky test refuses to confess." },
-  { "id": "algiz",    "glyph": "ᛉ", "name": "Algiz",    "keywords": ["elk", "ward", "protection"],          "upright": "a guard rune over production; the diff is shielded.",               "reversed": "lowered defenses; a missing assertion invites grief." },
-  { "id": "sowilo",   "glyph": "ᛊ", "name": "Sowilo",   "keywords": ["sun", "victory", "wholeness"],        "upright": "the sun breaks through; green checks across the board.",            "reversed": "blinding light; over-eager optimism hides a regression." },
-  { "id": "tiwaz",    "glyph": "ᛏ", "name": "Tiwaz",    "keywords": ["justice", "sacrifice", "warrior"],    "upright": "a fair trade — complexity removed at the cost of cleverness.",      "reversed": "honor stained; a hot-fix bypasses the review covenant." },
-  { "id": "berkano",  "glyph": "ᛒ", "name": "Berkano",  "keywords": ["birch", "growth", "renewal"],         "upright": "fresh modules sprout; a clean abstraction takes root.",             "reversed": "stunted growth; the new feature struggles to germinate." },
-  { "id": "ehwaz",    "glyph": "ᛖ", "name": "Ehwaz",    "keywords": ["horse", "partnership", "movement"],   "upright": "author and reviewer ride as one; momentum carries the PR.",         "reversed": "the steed bucks; coordination falters between contributors." },
-  { "id": "mannaz",   "glyph": "ᛗ", "name": "Mannaz",   "keywords": ["self", "humanity", "community"],      "upright": "the change honors its users; humane defaults prevail.",             "reversed": "ego in the diff; cleverness over clarity." },
-  { "id": "laguz",    "glyph": "ᛚ", "name": "Laguz",    "keywords": ["water", "flow", "intuition"],         "upright": "the diff flows naturally through the codebase; no friction.",       "reversed": "a stagnant pool; the abstraction does not drain into existing code." },
-  { "id": "ingwaz",   "glyph": "ᛜ", "name": "Ingwaz",   "keywords": ["seed", "potential", "gestation"],     "upright": "the work is complete in itself; a self-contained release.",         "reversed": "an unfinished idea released too soon; the seed scattered." },
-  { "id": "dagaz",    "glyph": "ᛞ", "name": "Dagaz",    "keywords": ["day", "breakthrough", "awakening"],   "upright": "dawn over the merge queue; a paradigm shift in this PR.",           "reversed": "the long night; insight delayed by another sprint." },
-  { "id": "othala",   "glyph": "ᛟ", "name": "Othala",   "keywords": ["heritage", "estate", "ancestry"],     "upright": "the change respects the codebase's lineage; conventions upheld.",   "reversed": "an heirloom discarded; a long-standing pattern broken without cause." }
-]
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "elder-futhark",
+  "name": "Elder Futhark",
+  "method": "runes",
+  "version": 1,
+  "cards": [
+    {
+      "id": "fehu",
+      "glyph": "ᚠ",
+      "name": "Fehu",
+      "keywords": [
+        "wealth",
+        "reward",
+        "cattle"
+      ],
+      "upright": "the diff brings tangible value; the merchant's bell rings.",
+      "reversed": "loss; effort spent without harvest."
+    },
+    {
+      "id": "uruz",
+      "glyph": "ᚢ",
+      "name": "Uruz",
+      "keywords": [
+        "strength",
+        "vitality",
+        "wild ox"
+      ],
+      "upright": "raw refactoring strength; the codebase grows muscle.",
+      "reversed": "brute force where finesse was needed."
+    },
+    {
+      "id": "thurisaz",
+      "glyph": "ᚦ",
+      "name": "Thurisaz",
+      "keywords": [
+        "thorn",
+        "conflict",
+        "defense"
+      ],
+      "upright": "a guardian thorn against bugs; defensive coding triumphs.",
+      "reversed": "a sharp edge turned inward; self-inflicted wounds in the logic."
+    },
+    {
+      "id": "ansuz",
+      "glyph": "ᚨ",
+      "name": "Ansuz",
+      "keywords": [
+        "message",
+        "signal",
+        "wisdom"
+      ],
+      "upright": "the commit message rings clear; the reviewers hear and nod.",
+      "reversed": "miscommunication; the PR description hides the truth."
+    },
+    {
+      "id": "raidho",
+      "glyph": "ᚱ",
+      "name": "Raidho",
+      "keywords": [
+        "journey",
+        "rhythm",
+        "wheel"
+      ],
+      "upright": "the change moves along the right path; CI hums in cadence.",
+      "reversed": "a detour through rebases; the journey lengthens."
+    },
+    {
+      "id": "kenaz",
+      "glyph": "ᚲ",
+      "name": "Kenaz",
+      "keywords": [
+        "torch",
+        "insight",
+        "craft"
+      ],
+      "upright": "illumination — a hidden pattern revealed to the craftsman.",
+      "reversed": "a sputtering torch; understanding falters mid-review."
+    },
+    {
+      "id": "gebo",
+      "glyph": "ᚷ",
+      "name": "Gebo",
+      "keywords": [
+        "gift",
+        "exchange",
+        "partnership"
+      ],
+      "upright": "a generous PR; pair-programming spirits smile.",
+      "reversed": "imbalance; one author labors while others reap."
+    },
+    {
+      "id": "wunjo",
+      "glyph": "ᚹ",
+      "name": "Wunjo",
+      "keywords": [
+        "joy",
+        "harmony",
+        "fellowship"
+      ],
+      "upright": "the team rejoices; review threads close with thumbs-up.",
+      "reversed": "discord in the channel; bikeshedding looms."
+    },
+    {
+      "id": "hagalaz",
+      "glyph": "ᚺ",
+      "name": "Hagalaz",
+      "keywords": [
+        "hail",
+        "disruption",
+        "uncontrolled"
+      ],
+      "upright": "a sudden storm of failing tests; nature's audit.",
+      "reversed": "lingering damage; flakes that refuse to thaw."
+    },
+    {
+      "id": "nauthiz",
+      "glyph": "ᚾ",
+      "name": "Nauthiz",
+      "keywords": [
+        "need",
+        "constraint",
+        "friction"
+      ],
+      "upright": "the constraint forges the design; necessity sharpens the diff.",
+      "reversed": "starvation of resources; the build runs out of memory."
+    },
+    {
+      "id": "isa",
+      "glyph": "ᛁ",
+      "name": "Isa",
+      "keywords": [
+        "ice",
+        "stillness",
+        "stasis"
+      ],
+      "upright": "freeze the branch; pause before pushing further.",
+      "reversed": "a thaw begins; the deadlock breaks."
+    },
+    {
+      "id": "jera",
+      "glyph": "ᛃ",
+      "name": "Jera",
+      "keywords": [
+        "harvest",
+        "cycle",
+        "reward"
+      ],
+      "upright": "the slow seeds of past commits ripen in this merge.",
+      "reversed": "an early harvest; the feature ships before it is ready."
+    },
+    {
+      "id": "eihwaz",
+      "glyph": "ᛇ",
+      "name": "Eihwaz",
+      "keywords": [
+        "yew",
+        "endurance",
+        "axis"
+      ],
+      "upright": "the architecture holds; deep roots steady the new branch.",
+      "reversed": "a brittle support; the load-bearing module groans."
+    },
+    {
+      "id": "perthro",
+      "glyph": "ᛈ",
+      "name": "Perthro",
+      "keywords": [
+        "mystery",
+        "lot",
+        "fate"
+      ],
+      "upright": "the unknown unknowns; an edge case waits to be cast.",
+      "reversed": "secrets hoarded; a flaky test refuses to confess."
+    },
+    {
+      "id": "algiz",
+      "glyph": "ᛉ",
+      "name": "Algiz",
+      "keywords": [
+        "elk",
+        "ward",
+        "protection"
+      ],
+      "upright": "a guard rune over production; the diff is shielded.",
+      "reversed": "lowered defenses; a missing assertion invites grief."
+    },
+    {
+      "id": "sowilo",
+      "glyph": "ᛊ",
+      "name": "Sowilo",
+      "keywords": [
+        "sun",
+        "victory",
+        "wholeness"
+      ],
+      "upright": "the sun breaks through; green checks across the board.",
+      "reversed": "blinding light; over-eager optimism hides a regression."
+    },
+    {
+      "id": "tiwaz",
+      "glyph": "ᛏ",
+      "name": "Tiwaz",
+      "keywords": [
+        "justice",
+        "sacrifice",
+        "warrior"
+      ],
+      "upright": "a fair trade — complexity removed at the cost of cleverness.",
+      "reversed": "honor stained; a hot-fix bypasses the review covenant."
+    },
+    {
+      "id": "berkano",
+      "glyph": "ᛒ",
+      "name": "Berkano",
+      "keywords": [
+        "birch",
+        "growth",
+        "renewal"
+      ],
+      "upright": "fresh modules sprout; a clean abstraction takes root.",
+      "reversed": "stunted growth; the new feature struggles to germinate."
+    },
+    {
+      "id": "ehwaz",
+      "glyph": "ᛖ",
+      "name": "Ehwaz",
+      "keywords": [
+        "horse",
+        "partnership",
+        "movement"
+      ],
+      "upright": "author and reviewer ride as one; momentum carries the PR.",
+      "reversed": "the steed bucks; coordination falters between contributors."
+    },
+    {
+      "id": "mannaz",
+      "glyph": "ᛗ",
+      "name": "Mannaz",
+      "keywords": [
+        "self",
+        "humanity",
+        "community"
+      ],
+      "upright": "the change honors its users; humane defaults prevail.",
+      "reversed": "ego in the diff; cleverness over clarity."
+    },
+    {
+      "id": "laguz",
+      "glyph": "ᛚ",
+      "name": "Laguz",
+      "keywords": [
+        "water",
+        "flow",
+        "intuition"
+      ],
+      "upright": "the diff flows naturally through the codebase; no friction.",
+      "reversed": "a stagnant pool; the abstraction does not drain into existing code."
+    },
+    {
+      "id": "ingwaz",
+      "glyph": "ᛜ",
+      "name": "Ingwaz",
+      "keywords": [
+        "seed",
+        "potential",
+        "gestation"
+      ],
+      "upright": "the work is complete in itself; a self-contained release.",
+      "reversed": "an unfinished idea released too soon; the seed scattered."
+    },
+    {
+      "id": "dagaz",
+      "glyph": "ᛞ",
+      "name": "Dagaz",
+      "keywords": [
+        "day",
+        "breakthrough",
+        "awakening"
+      ],
+      "upright": "dawn over the merge queue; a paradigm shift in this PR.",
+      "reversed": "the long night; insight delayed by another sprint."
+    },
+    {
+      "id": "othala",
+      "glyph": "ᛟ",
+      "name": "Othala",
+      "keywords": [
+        "heritage",
+        "estate",
+        "ancestry"
+      ],
+      "upright": "the change respects the codebase's lineage; conventions upheld.",
+      "reversed": "an heirloom discarded; a long-standing pattern broken without cause."
+    }
+  ]
+}

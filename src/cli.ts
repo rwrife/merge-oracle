@@ -13,6 +13,13 @@ import {
 import { createOfflineClient } from "./llm/client.js";
 import { runStdioServer } from "./mcp/server.js";
 import {
+  DECKS_DIR_ENV,
+  describeDeckSource,
+  listDecks,
+  resolveDeck,
+} from "./data/decks/_registry.js";
+import { DeckValidationError } from "./data/decks/types.js";
+import {
   DEFAULT_BLESS_THRESHOLD,
   assessDiffSeverity,
   installHook,
@@ -82,6 +89,10 @@ program
     "--png-size <WxH>",
     "PNG dimensions, e.g. 1200x630 (default) or 1600x840",
   )
+  .option(
+    "--deck <id-or-path>",
+    "deck id (see `oracle decks`) or path to a deck JSON file (methods that support alternate decks only)",
+  )
   .action(
     async (
       source: string,
@@ -96,6 +107,7 @@ program
         png?: string;
         pngTheme: string;
         pngSize?: string;
+        deck?: string;
       },
     ) => {
     const method = getMethod(opts.method);
@@ -155,13 +167,25 @@ program
       process.exit(2);
       return;
     }
+    let deck: ReturnType<typeof resolveDeck> | undefined;
+    if (opts.deck) {
+      try {
+        deck = resolveDeck(opts.deck, method.id);
+      } catch (err) {
+        console.error(
+          err instanceof DeckValidationError ? err.message : (err as Error).message,
+        );
+        process.exit(2);
+        return;
+      }
+    }
     const { spread, autoUpgraded } = resolveSpreadSelection({
       supportedSpreads: method.supportedSpreads,
       requested: opts.spread,
       diff: loaded.diff,
       threshold,
     });
-    const callOpts = spread ? { spread } : undefined;
+    const callOpts = spread || deck ? { spread, deck } : undefined;
     const symbols = method.draw(loaded.diff, callOpts);
     try {
       const client = opts.offline
@@ -249,6 +273,9 @@ program
               channel: client.id,
               spread: spread ?? null,
               spreadAutoUpgraded: autoUpgraded,
+              deck: deck
+                ? { id: deck.id, name: deck.name, source: deck.source, sourcePath: deck.sourcePath }
+                : null,
               diffLoc: countDiffLoc(loaded.diff),
               bigPrThreshold: threshold,
               symbols,
@@ -266,6 +293,7 @@ program
       const spreadLabel = spread
         ? `   spread: ${spread}${autoUpgraded ? " (auto-upgraded: big PR)" : ""}\n`
         : "";
+      const deckLabel = deck ? `   deck: ${deck.id} (${describeDeckSource(deck)})\n` : "";
       const historyLabel = historyId != null ? `   history: #${historyId}\n` : "";
       const pngLabel =
         pngResult && pngResult.path !== "-"
@@ -277,6 +305,7 @@ program
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
           spreadLabel +
+          deckLabel +
           `   persona: ${persona.name}\n` +
           `   channel: ${client.id}\n` +
           historyLabel +
@@ -331,6 +360,49 @@ program
     for (const m of methods) {
       const marker = m.id === DEFAULT_METHOD_ID ? "*" : " ";
       process.stdout.write(`${marker} ${m.id.padEnd(12)} ${m.name}\n      ${m.describe()}\n`);
+    }
+  });
+
+program
+  .command("decks")
+  .description("list registered decks (bundled + $MERGE_ORACLE_DECKS_DIR)")
+  .option("--method <id>", "filter by divination method id")
+  .option("--json", "emit the deck list as JSON instead of rendered text")
+  .action((opts: { method?: string; json?: boolean }) => {
+    const decks = listDecks(opts.method);
+    if (opts.json) {
+      process.stdout.write(
+        JSON.stringify(
+          {
+            env: DECKS_DIR_ENV,
+            envDir: process.env[DECKS_DIR_ENV] ?? null,
+            filter: opts.method ?? null,
+            decks: decks.map((d) => ({
+              id: d.id,
+              name: d.name,
+              method: d.method,
+              version: d.version,
+              cards: d.cards.length,
+              source: d.source,
+              sourceLabel: describeDeckSource(d),
+              sourcePath: d.sourcePath,
+            })),
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+      return;
+    }
+    if (decks.length === 0) {
+      const scope = opts.method ? ` for method '${opts.method}'` : "";
+      process.stdout.write(`no decks registered${scope} — the archive is bare.\n`);
+      return;
+    }
+    for (const d of decks) {
+      process.stdout.write(
+        `  ${d.id.padEnd(20)} ${d.method.padEnd(12)} ${d.cards.length.toString().padStart(3)} cards  ${describeDeckSource(d).padEnd(24)} ${d.name}\n`,
+      );
     }
   });
 

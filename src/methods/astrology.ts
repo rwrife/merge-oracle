@@ -39,7 +39,7 @@ interface ZodiacSign {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DECK_PATH = resolve(HERE, "../data/decks/zodiac.json");
-const ZODIAC: ZodiacSign[] = JSON.parse(readFileSync(DECK_PATH, "utf8"));
+const ZODIAC: ZodiacSign[] = (JSON.parse(readFileSync(DECK_PATH, "utf8")) as { cards: ZodiacSign[] }).cards;
 const BY_ID = new Map(ZODIAC.map((s) => [s.id, s]));
 
 const SPREAD: ReadonlyArray<{ slot: "Sun" | "Moon" | "Rising"; gloss: string }> = [

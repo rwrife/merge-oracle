@@ -16,7 +16,7 @@ interface TeaShape {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DECK_PATH = resolve(HERE, "../data/decks/tea-leaves.json");
-const SHAPES: TeaShape[] = JSON.parse(readFileSync(DECK_PATH, "utf8"));
+const SHAPES: TeaShape[] = (JSON.parse(readFileSync(DECK_PATH, "utf8")) as { cards: TeaShape[] }).cards;
 const BY_ID = new Map(SHAPES.map((s) => [s.id, s]));
 
 /**

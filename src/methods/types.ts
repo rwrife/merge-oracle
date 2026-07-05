@@ -1,4 +1,5 @@
 import type { ChatMessage } from "../llm/prompts.js";
+import type { LoadedDeck } from "../data/decks/types.js";
 
 /**
  * Optional spread descriptor a method can declare in {@link DivinationMethod.supportedSpreads}.
@@ -14,9 +15,14 @@ export interface SpreadDescriptor {
 /**
  * Options threaded through draw/readingPrompt/render so a method can honor
  * the caller's choice of spread (or fall back to its default).
+ *
+ * `deck` is an already-resolved (registry-loaded or path-loaded) deck. When
+ * omitted, methods that support pluggable decks fall back to their bundled
+ * default. Methods that do not support alternate decks may ignore the field.
  */
 export interface MethodCallOptions {
   spread?: string;
+  deck?: LoadedDeck;
 }
 
 /**

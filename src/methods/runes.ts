@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import type { ChatMessage } from "../llm/prompts.js";
 import { assembleReadingPrompt } from "../llm/prompts.js";
-import type { DivinationMethod, DrawnSymbol } from "./types.js";
+import type { DivinationMethod, DrawnSymbol, MethodCallOptions } from "./types.js";
+import type { DeckSchema, LoadedDeck } from "../data/decks/types.js";
+import { DeckValidationError } from "../data/decks/types.js";
 
 interface Rune {
   id: string;
@@ -17,7 +19,12 @@ interface Rune {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DECK_PATH = resolve(HERE, "../data/decks/elder-futhark.json");
-const FUTHARK: Rune[] = JSON.parse(readFileSync(DECK_PATH, "utf8"));
+const DEFAULT_DECK_CARDS: Rune[] = (
+  JSON.parse(readFileSync(DECK_PATH, "utf8")) as { cards: Rune[] }
+).cards;
+
+/** Id of the bundled default runes deck. */
+export const DEFAULT_RUNES_DECK_ID = "elder-futhark";
 
 const SPREAD: ReadonlyArray<{ slot: string; gloss: string }> = [
   { slot: "Situation", gloss: "what the diff truly is, beneath its commit message" },
@@ -25,16 +32,98 @@ const SPREAD: ReadonlyArray<{ slot: string; gloss: string }> = [
   { slot: "Outcome",   gloss: "the rune cast for what merging brings" },
 ];
 
+/**
+ * Per-method card schema. Consumed by the deck registry / validators; unknown
+ * fields are ignored, missing required fields throw a message the registry
+ * annotates with the deck id and card index.
+ */
+export const runesDeckSchema: DeckSchema<Rune> = {
+  method: "runes",
+  validateCard(raw: unknown, index: number): Rune {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      throw new DeckValidationError(`card #${index}: expected an object`, { cardIndex: index });
+    }
+    const r = raw as Record<string, unknown>;
+    const missing: string[] = [];
+    const id = typeof r.id === "string" ? r.id : null;
+    const glyph = typeof r.glyph === "string" ? r.glyph : null;
+    const name = typeof r.name === "string" ? r.name : null;
+    const upright = typeof r.upright === "string" ? r.upright : null;
+    const reversed = typeof r.reversed === "string" ? r.reversed : null;
+    const keywords = Array.isArray(r.keywords) && r.keywords.every((k) => typeof k === "string")
+      ? (r.keywords as string[])
+      : null;
+    if (!id) missing.push("id");
+    if (!glyph) missing.push("glyph");
+    if (!name) missing.push("name");
+    if (!upright) missing.push("upright");
+    if (!reversed) missing.push("reversed");
+    if (!keywords) missing.push("keywords[]");
+    if (missing.length > 0) {
+      throw new DeckValidationError(
+        `card #${index} is missing required field(s): ${missing.join(", ")}`,
+        { cardIndex: index },
+      );
+    }
+    return {
+      id: id!,
+      glyph: glyph!,
+      name: name!,
+      upright: upright!,
+      reversed: reversed!,
+      keywords: keywords!,
+    };
+  },
+};
+
+const VALIDATED: Map<string, Rune[]> = new Map();
+
+function resolveDeckCards(opts?: MethodCallOptions): Rune[] {
+  if (!opts?.deck) return DEFAULT_DECK_CARDS;
+  return validateDeckOnce(opts.deck);
+}
+
+function validateDeckOnce(deck: LoadedDeck): Rune[] {
+  const cached = VALIDATED.get(deck.id);
+  if (cached) return cached;
+  if (deck.method !== "runes") {
+    throw new DeckValidationError(
+      `deck '${deck.id}' is for method '${deck.method}', not 'runes'`,
+      { deckId: deck.id },
+    );
+  }
+  const cards: Rune[] = deck.cards.map((c, i) => {
+    try {
+      return runesDeckSchema.validateCard(c, i);
+    } catch (err) {
+      const msg = err instanceof DeckValidationError ? err.message : String(err);
+      throw new DeckValidationError(`deck '${deck.id}': ${msg}`, {
+        deckId: deck.id,
+        cardIndex: i,
+      });
+    }
+  });
+  if (cards.length < 3) {
+    throw new DeckValidationError(
+      `deck '${deck.id}' has only ${cards.length} runes; a cast needs at least 3`,
+      { deckId: deck.id },
+    );
+  }
+  VALIDATED.set(deck.id, cards);
+  return cards;
+}
+
 function hashRunes(diff: string): number {
   // Use a different byte slice from tarot so the two methods don't lockstep.
   return createHash("sha256").update(diff).digest().readUInt32BE(4);
 }
 
 /**
- * Deterministically cast three distinct runes from the Elder Futhark.
+ * Deterministically cast three distinct runes from the resolved deck.
  * Same diff → same cast → same orientations.
  */
-export function castRunes(diff: string): DrawnSymbol[] {
+export function castRunes(diff: string, opts?: MethodCallOptions): DrawnSymbol[] {
+  const runeSet = resolveDeckCards(opts);
   const seed = hashRunes(diff);
   let state = seed === 0 ? 0x9e3779b1 : seed;
   const next = () => {
@@ -49,12 +138,12 @@ export function castRunes(diff: string): DrawnSymbol[] {
 
   const indices: number[] = [];
   while (indices.length < 3) {
-    const candidate = next() % FUTHARK.length;
+    const candidate = next() % runeSet.length;
     if (!indices.includes(candidate)) indices.push(candidate);
   }
 
   return indices.map((idx, i) => {
-    const rune = FUTHARK[idx];
+    const rune = runeSet[idx];
     const reversed = (next() & 1) === 1;
     return {
       id: `rune:${rune.id}`,
@@ -130,19 +219,25 @@ function centerPad(text: string, width: number): string {
   return " ".repeat(left) + text + " ".repeat(right);
 }
 
+/** Reset validation cache — test helper. */
+export function resetRunesDeckCache(): void {
+  VALIDATED.clear();
+}
+
 export const runes: DivinationMethod = {
   id: "runes",
   name: "Runes — Situation / Obstacle / Outcome",
   describe() {
     return "casts three Elder Futhark runes seeded by the diff hash and reads them as Situation, Obstacle, and Outcome of the merge.";
   },
-  draw(diff: string) {
-    return castRunes(diff);
+  draw(diff: string, opts?: MethodCallOptions) {
+    return castRunes(diff, opts);
   },
-  readingPrompt(symbols: DrawnSymbol[], diff: string): ChatMessage[] {
+  readingPrompt(symbols: DrawnSymbol[], diff: string, opts?: MethodCallOptions): ChatMessage[] {
     const symbolStrings = symbols.map(describeSymbol);
+    const deckLabel = opts?.deck ? ` (deck: ${opts.deck.name})` : "";
     const extraSystem = [
-      "You are reading a 3-rune Elder Futhark cast for a pull request.",
+      `You are reading a 3-rune Elder Futhark cast${deckLabel} for a pull request.`,
       "Address each rune in order (Situation, Obstacle, Outcome) in 1–2 sentences,",
       "tying each rune's meaning to something concrete in the diff.",
       "Reversed runes are called 'merkstave' — read their warning meaning.",

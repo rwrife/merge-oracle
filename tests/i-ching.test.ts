@@ -14,9 +14,11 @@ const FIXTURE = readFileSync(resolve(__dirname, "../test/fixtures/multi-file.dif
 
 describe("methods/i-ching deck integrity", () => {
   it("contains all 64 hexagrams with unique binaries", () => {
-    const deck: Array<{ id: number; binary: string }> = JSON.parse(
-      readFileSync(resolve(__dirname, "../src/data/decks/i-ching.json"), "utf8"),
-    );
+    const deck: Array<{ id: number; binary: string }> = (
+      JSON.parse(
+        readFileSync(resolve(__dirname, "../src/data/decks/i-ching.json"), "utf8"),
+      ) as { cards: Array<{ id: number; binary: string }> }
+    ).cards;
     expect(deck).toHaveLength(64);
     const ids = new Set(deck.map((h) => h.id));
     const bins = new Set(deck.map((h) => h.binary));

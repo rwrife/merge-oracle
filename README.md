@@ -231,6 +231,60 @@ Shipped personas:
 
 Omitting `--persona` (and `ORACLE_PERSONA`) preserves the historical voice exactly.
 
+### Custom decks
+Methods that support pluggable decks (currently `tarot` and `runes`) can draw from any deck registered with the CLI. A **deck** is a small JSON document containing a name, method id, and an array of cards. Bundled decks (`major-arcana`, `elder-futhark`, `i-ching`, `tea-leaves`, `zodiac`) ship inside `src/data/decks/` and are always available.
+
+List registered decks:
+
+```sh
+oracle decks
+oracle decks --method=tarot
+oracle decks --json
+```
+
+Use a specific deck for a reading — by registry id or by direct path:
+
+```sh
+# bundled default (equivalent — omit --deck)
+oracle read ./pr.diff --method=tarot
+
+# BYO deck from disk
+oracle read ./pr.diff --method=tarot --deck=./my-thoth.json
+
+# register a whole directory of extra decks, then reference by id
+export MERGE_ORACLE_DECKS_DIR=$HOME/oracle-decks
+oracle decks
+oracle read ./pr.diff --method=runes --deck=younger-futhark
+```
+
+Deck JSON schema (v1) — the outer envelope is the same for every method:
+
+```json
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "thoth",
+  "name": "Thoth Tarot",
+  "method": "tarot",
+  "version": 1,
+  "cards": [
+    {
+      "id": "the-fool",
+      "name": "The Fool",
+      "keywords": ["beginnings", "leap"],
+      "upright": "a fresh branch leaps without looking; the journey begins.",
+      "reversed": "recklessness; a leap into untested waters."
+    }
+  ]
+}
+```
+
+- `method` must match an existing divination method (`tarot`, `runes`). Cards are validated per-method — see the JSON schema at [`docs/deck.schema.json`](docs/deck.schema.json) for the exact card shape each method expects.
+- Missing required fields fail fast with a message pointing at the offending card index (e.g. `deck 'my-thoth': card #7 is missing required field(s): reversed`).
+- Unknown card fields are silently ignored, so decks can carry extra metadata (art credits, translations) without breaking the loader.
+- Env-provided decks may **not** override bundled deck ids (rename to differentiate). Duplicate ids across env files are refused with a warning.
+
+Runnable examples live in [`examples/decks/`](examples/decks/README.md).
+
 ### How to add a divination method
 Methods are plain TypeScript files in `src/methods/`. The registry auto-discovers any sibling module that exports an object implementing the `DivinationMethod` interface (`id`, `name`, `describe`, `draw`, `readingPrompt`, `render`).
 
