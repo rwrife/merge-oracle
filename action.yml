@@ -7,7 +7,7 @@ branding:
 
 inputs:
   method:
-    description: "Divination method id (tarot, runes, tea-leaves, i-ching)."
+    description: "Divination method id (tarot, runes, tea-leaves, i-ching, numerology, astrology)."
     required: false
     default: "tarot"
   offline:

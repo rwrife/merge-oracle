@@ -5,7 +5,7 @@
 A mystical CLI oracle that divines the fate of your pull requests via tarot, runes, tea leaves, or I-Ching. Half useful PR review, half theatre — feed it a diff, get back a dramatic ritual reading.
 
 ## Status
-🌒 Approaching first release. Tarot, runes, tea-leaves, and I-Ching methods are wired up end-to-end; npm publish is gated behind the `release` workflow (tag `v*`). See [PLAN.md](./PLAN.md) and [CHANGELOG.md](./CHANGELOG.md).
+🌒 Approaching first release. Tarot, runes, tea-leaves, I-Ching, numerology, and astrology methods are wired up end-to-end; npm publish is gated behind the `release` workflow (tag `v*`). See [PLAN.md](./PLAN.md) and [CHANGELOG.md](./CHANGELOG.md).
 
 ## Quick taste (planned UX)
 ```bash
@@ -95,6 +95,29 @@ The `numerology` method reads the *numbers* of a diff — no hash, no LLM tricke
 node dist/cli.js read ./feature.diff --method=numerology --offline
 ```
 
+### Astrology reading
+The `astrology` method casts a three-sign natal chart for the PR itself: **Sun** from the diff's creation timestamp (parsed from a `Date:` header when the diff carries one, else hash-synthesized), **Moon** from the commit author's birthday (`git config user.birthday`, accepted as `YYYY-MM-DD` or `MM-DD` — synthesized deterministically from `user.email` when absent), and **Rising** from the base branch + repo name. Element, modality, and ruling planet are woven into the reading. When the natal date is synthesized rather than configured, the reading discloses this in a `— chart cast from synthesized natal date` footer.
+
+```bash
+node dist/cli.js read ./feature.diff --method=astrology --offline
+
+# Opt in to a real natal Moon by setting your birthday once:
+git config --global user.birthday 1990-04-15
+```
+
+Example offline output:
+
+```
++-------------+   +-------------+   +-------------+
+|      ♐      |   |      ♋      |   |      ♊      |
+| Sagittarius |   |   Cancer    |   |   Gemini    |
++-------------+   +-------------+   +-------------+
+
+      Sun              Moon             Rising
+
+— chart cast from synthesized natal date
+```
+
 ### Cursing your repo
 Opt-in pre-push hook. `oracle bless --install` writes a tiny `.git/hooks/pre-push` script that pipes your outgoing diff through `oracle bless --check` (pure offline heuristics — no LLM, no network) and aborts the push when the verdict's `severity` meets/exceeds `ORACLE_BLESS_THRESHOLD` (default `8`). Catches the obvious sins: secret-shaped strings in additions (`AKIA…`, `sk-…`, `ghp_…`, PEM keys), removed test files, mass-deletion sprees, `TODO: revert before merge` markers, and absurdly-huge diffs.
 
@@ -153,7 +176,7 @@ jobs:
     steps:
       - uses: rwrife/merge-oracle@v1
         with:
-          method: tarot            # tarot | runes | tea-leaves | i-ching | numerology
+          method: tarot            # tarot | runes | tea-leaves | i-ching | numerology | astrology
           offline: "false"          # use canned drivel when no LLM is configured
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}

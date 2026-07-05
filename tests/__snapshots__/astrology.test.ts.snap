@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`methods/astrology ASCII render > ASCII cast matches snapshot for the multi-file fixture (offline / noGit) 1`] = `
+"+-------------+   +-------------+   +-------------+
+|      ♐      |   |      ♋      |   |      ♊      |
+| Sagittarius |   |   Cancer    |   |   Gemini    |
++-------------+   +-------------+   +-------------+
+
+      Sun              Moon             Rising     
+
+— chart cast from synthesized natal date"
+`;
