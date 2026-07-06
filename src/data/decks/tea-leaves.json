@@ -1,22 +1,228 @@
-[
-  { "id": "snake",       "glyph": "~",  "name": "Snake",        "keywords": ["hidden bug", "deception", "winding logic"],     "meaning": "a twisting path conceals a defect — review the indirection." },
-  { "id": "tower",       "glyph": "T",  "name": "Tower",        "keywords": ["overreach", "scope creep", "stacked change"],  "meaning": "the change rises taller than it should — fragile under merge winds." },
-  { "id": "ring",        "glyph": "O",  "name": "Ring",         "keywords": ["closure", "completion", "loop"],               "meaning": "a cycle closes — this PR ties off something long open." },
-  { "id": "star",        "glyph": "*",  "name": "Star",         "keywords": ["clarity", "guidance", "small good"],           "meaning": "a small bright change that points the way forward." },
-  { "id": "crescent",    "glyph": ")",  "name": "Crescent",     "keywords": ["incomplete", "waxing", "more to come"],        "meaning": "only half a story is told — expect a follow-up PR." },
-  { "id": "spiral",      "glyph": "@",  "name": "Spiral",       "keywords": ["refactor", "recursion", "rework"],             "meaning": "the work coils inward — refactor energy, not new value." },
-  { "id": "path",        "glyph": "/",  "name": "Path",         "keywords": ["progress", "linear", "forward motion"],        "meaning": "a clean line forward — focused, easy to follow." },
-  { "id": "crossroads",  "glyph": "X",  "name": "Crossroads",   "keywords": ["decision", "conflict", "branching"],           "meaning": "competing directions in one diff — split or commit to one." },
-  { "id": "anchor",      "glyph": "&",  "name": "Anchor",       "keywords": ["stability", "foundation", "infrastructure"],   "meaning": "ground is laid — something to build on later." },
-  { "id": "cloud",       "glyph": "%",  "name": "Cloud",        "keywords": ["uncertainty", "fog", "missing tests"],         "meaning": "intent is hazy — reviewers will need to squint." },
-  { "id": "mountain",    "glyph": "^",  "name": "Mountain",     "keywords": ["large effort", "obstacle", "ambition"],        "meaning": "a heavy lift — guard against reviewer fatigue." },
-  { "id": "drop",        "glyph": ".",  "name": "Drop",         "keywords": ["small", "isolated", "trivial"],                "meaning": "a tiny ripple — merge swiftly before it goes stale." },
-  { "id": "tree",        "glyph": "Y",  "name": "Tree",         "keywords": ["growth", "branching files", "expansion"],      "meaning": "the change branches outward across the tree." },
-  { "id": "lightning",   "glyph": "Z",  "name": "Lightning",    "keywords": ["sudden change", "break", "rapid"],             "meaning": "an abrupt strike — fast, but may shock dependents." },
-  { "id": "scales",      "glyph": "=",  "name": "Scales",       "keywords": ["balanced", "additions vs deletions"],          "meaning": "additions and deletions weigh evenly — a measured trade." },
-  { "id": "knife",       "glyph": "!",  "name": "Knife",        "keywords": ["deletion", "removal", "cut"],                  "meaning": "code is cut away — confirm nothing downstream still calls it." },
-  { "id": "bird",        "glyph": "v",  "name": "Bird",         "keywords": ["message", "news", "communication"],            "meaning": "a small announcement carried abroad — docs or comments lead." },
-  { "id": "heart",       "glyph": "+",  "name": "Heart",        "keywords": ["care", "polish", "fix"],                       "meaning": "tender attention — a small kindness to the codebase." },
-  { "id": "key",         "glyph": "k",  "name": "Key",          "keywords": ["unlock", "enable", "new capability"],          "meaning": "something previously locked is opened — a new door." },
-  { "id": "web",         "glyph": "#",  "name": "Web",          "keywords": ["entanglement", "many touches", "coupling"],    "meaning": "threads cross many files — a delicate weave to merge." }
-]
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "tea-leaves",
+  "name": "Tea Leaf Shapes",
+  "method": "tea-leaves",
+  "version": 1,
+  "cards": [
+    {
+      "id": "snake",
+      "glyph": "~",
+      "name": "Snake",
+      "keywords": [
+        "hidden bug",
+        "deception",
+        "winding logic"
+      ],
+      "meaning": "a twisting path conceals a defect — review the indirection."
+    },
+    {
+      "id": "tower",
+      "glyph": "T",
+      "name": "Tower",
+      "keywords": [
+        "overreach",
+        "scope creep",
+        "stacked change"
+      ],
+      "meaning": "the change rises taller than it should — fragile under merge winds."
+    },
+    {
+      "id": "ring",
+      "glyph": "O",
+      "name": "Ring",
+      "keywords": [
+        "closure",
+        "completion",
+        "loop"
+      ],
+      "meaning": "a cycle closes — this PR ties off something long open."
+    },
+    {
+      "id": "star",
+      "glyph": "*",
+      "name": "Star",
+      "keywords": [
+        "clarity",
+        "guidance",
+        "small good"
+      ],
+      "meaning": "a small bright change that points the way forward."
+    },
+    {
+      "id": "crescent",
+      "glyph": ")",
+      "name": "Crescent",
+      "keywords": [
+        "incomplete",
+        "waxing",
+        "more to come"
+      ],
+      "meaning": "only half a story is told — expect a follow-up PR."
+    },
+    {
+      "id": "spiral",
+      "glyph": "@",
+      "name": "Spiral",
+      "keywords": [
+        "refactor",
+        "recursion",
+        "rework"
+      ],
+      "meaning": "the work coils inward — refactor energy, not new value."
+    },
+    {
+      "id": "path",
+      "glyph": "/",
+      "name": "Path",
+      "keywords": [
+        "progress",
+        "linear",
+        "forward motion"
+      ],
+      "meaning": "a clean line forward — focused, easy to follow."
+    },
+    {
+      "id": "crossroads",
+      "glyph": "X",
+      "name": "Crossroads",
+      "keywords": [
+        "decision",
+        "conflict",
+        "branching"
+      ],
+      "meaning": "competing directions in one diff — split or commit to one."
+    },
+    {
+      "id": "anchor",
+      "glyph": "&",
+      "name": "Anchor",
+      "keywords": [
+        "stability",
+        "foundation",
+        "infrastructure"
+      ],
+      "meaning": "ground is laid — something to build on later."
+    },
+    {
+      "id": "cloud",
+      "glyph": "%",
+      "name": "Cloud",
+      "keywords": [
+        "uncertainty",
+        "fog",
+        "missing tests"
+      ],
+      "meaning": "intent is hazy — reviewers will need to squint."
+    },
+    {
+      "id": "mountain",
+      "glyph": "^",
+      "name": "Mountain",
+      "keywords": [
+        "large effort",
+        "obstacle",
+        "ambition"
+      ],
+      "meaning": "a heavy lift — guard against reviewer fatigue."
+    },
+    {
+      "id": "drop",
+      "glyph": ".",
+      "name": "Drop",
+      "keywords": [
+        "small",
+        "isolated",
+        "trivial"
+      ],
+      "meaning": "a tiny ripple — merge swiftly before it goes stale."
+    },
+    {
+      "id": "tree",
+      "glyph": "Y",
+      "name": "Tree",
+      "keywords": [
+        "growth",
+        "branching files",
+        "expansion"
+      ],
+      "meaning": "the change branches outward across the tree."
+    },
+    {
+      "id": "lightning",
+      "glyph": "Z",
+      "name": "Lightning",
+      "keywords": [
+        "sudden change",
+        "break",
+        "rapid"
+      ],
+      "meaning": "an abrupt strike — fast, but may shock dependents."
+    },
+    {
+      "id": "scales",
+      "glyph": "=",
+      "name": "Scales",
+      "keywords": [
+        "balanced",
+        "additions vs deletions"
+      ],
+      "meaning": "additions and deletions weigh evenly — a measured trade."
+    },
+    {
+      "id": "knife",
+      "glyph": "!",
+      "name": "Knife",
+      "keywords": [
+        "deletion",
+        "removal",
+        "cut"
+      ],
+      "meaning": "code is cut away — confirm nothing downstream still calls it."
+    },
+    {
+      "id": "bird",
+      "glyph": "v",
+      "name": "Bird",
+      "keywords": [
+        "message",
+        "news",
+        "communication"
+      ],
+      "meaning": "a small announcement carried abroad — docs or comments lead."
+    },
+    {
+      "id": "heart",
+      "glyph": "+",
+      "name": "Heart",
+      "keywords": [
+        "care",
+        "polish",
+        "fix"
+      ],
+      "meaning": "tender attention — a small kindness to the codebase."
+    },
+    {
+      "id": "key",
+      "glyph": "k",
+      "name": "Key",
+      "keywords": [
+        "unlock",
+        "enable",
+        "new capability"
+      ],
+      "meaning": "something previously locked is opened — a new door."
+    },
+    {
+      "id": "web",
+      "glyph": "#",
+      "name": "Web",
+      "keywords": [
+        "entanglement",
+        "many touches",
+        "coupling"
+      ],
+      "meaning": "threads cross many files — a delicate weave to merge."
+    }
+  ]
+}

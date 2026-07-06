@@ -5,6 +5,8 @@ import { dirname, resolve } from "node:path";
 import type { ChatMessage } from "../llm/prompts.js";
 import { assembleReadingPrompt } from "../llm/prompts.js";
 import type { DivinationMethod, DrawnSymbol, MethodCallOptions, SpreadDescriptor } from "./types.js";
+import type { DeckSchema, LoadedDeck } from "../data/decks/types.js";
+import { DeckValidationError } from "../data/decks/types.js";
 
 interface ArcanaCard {
   id: number;
@@ -16,7 +18,19 @@ interface ArcanaCard {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DECK_PATH = resolve(HERE, "../data/decks/major-arcana.json");
-const ARCANA: ArcanaCard[] = JSON.parse(readFileSync(DECK_PATH, "utf8"));
+
+/**
+ * Default bundled deck loaded eagerly from disk. Kept side-by-side with the
+ * registry-loaded copy so tests that call `drawTarot(diff)` without going
+ * through the registry still work exactly as before.
+ */
+const DEFAULT_DECK_CARDS: ArcanaCard[] = (
+  JSON.parse(readFileSync(DECK_PATH, "utf8")) as { cards: ArcanaCard[] }
+).cards;
+
+/** Id of the bundled default tarot deck. */
+export const DEFAULT_TAROT_DECK_ID = "major-arcana";
+
 const THREE_CARD_SPREAD: ReadonlyArray<{ slot: string; gloss: string }> = [
   { slot: "Past",    gloss: "the karma of the base branch — what came before this change" },
   { slot: "Present", gloss: "the diff itself — the working ritual on the table" },
@@ -58,6 +72,96 @@ function resolveSpread(opts?: MethodCallOptions): TarotSpreadId {
 }
 
 /**
+ * Per-method card schema exposed for the deck registry / validators. Unknown
+ * fields are ignored; missing required fields throw a message the registry
+ * annotates with the deck id.
+ */
+export const tarotDeckSchema: DeckSchema<ArcanaCard> = {
+  method: "tarot",
+  validateCard(raw: unknown, index: number): ArcanaCard {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      throw new DeckValidationError(`card #${index}: expected an object`, { cardIndex: index });
+    }
+    const r = raw as Record<string, unknown>;
+    const missing: string[] = [];
+    const id = typeof r.id === "number" || typeof r.id === "string" ? (r.id as number | string) : null;
+    const name = typeof r.name === "string" ? r.name : null;
+    const upright = typeof r.upright === "string" ? r.upright : null;
+    const reversed = typeof r.reversed === "string" ? r.reversed : null;
+    const keywords = Array.isArray(r.keywords) && r.keywords.every((k) => typeof k === "string")
+      ? (r.keywords as string[])
+      : null;
+    if (id === null) missing.push("id");
+    if (!name) missing.push("name");
+    if (!upright) missing.push("upright");
+    if (!reversed) missing.push("reversed");
+    if (!keywords) missing.push("keywords[]");
+    if (missing.length > 0) {
+      throw new DeckValidationError(
+        `card #${index} is missing required field(s): ${missing.join(", ")}`,
+        { cardIndex: index },
+      );
+    }
+    // Normalize numeric ids to number when we can, but preserve strings so
+    // custom decks with hyphenated ids ("the-fool") work unchanged.
+    const normalizedId =
+      typeof id === "string" && /^-?\d+$/.test(id) ? Number.parseInt(id, 10) : id;
+    return {
+      id: normalizedId as number,
+      name: name!,
+      upright: upright!,
+      reversed: reversed!,
+      keywords: keywords!,
+    };
+  },
+};
+
+/**
+ * Resolve the deck to draw from. Priority:
+ *   1. Explicit `opts.deck` (already loaded by the registry / caller).
+ *   2. Bundled default deck (loaded once at module init).
+ *
+ * Validates cards on first use; validation results are cached per deck id so
+ * repeated draws don't re-walk large decks.
+ */
+const VALIDATED: Map<string, ArcanaCard[]> = new Map();
+
+function resolveDeckCards(opts?: MethodCallOptions): ArcanaCard[] {
+  if (!opts?.deck) return DEFAULT_DECK_CARDS;
+  return validateDeckOnce(opts.deck);
+}
+
+function validateDeckOnce(deck: LoadedDeck): ArcanaCard[] {
+  const cached = VALIDATED.get(deck.id);
+  if (cached) return cached;
+  if (deck.method !== "tarot") {
+    throw new DeckValidationError(
+      `deck '${deck.id}' is for method '${deck.method}', not 'tarot'`,
+      { deckId: deck.id },
+    );
+  }
+  const cards: ArcanaCard[] = deck.cards.map((c, i) => {
+    try {
+      return tarotDeckSchema.validateCard(c, i);
+    } catch (err) {
+      const msg = err instanceof DeckValidationError ? err.message : String(err);
+      throw new DeckValidationError(`deck '${deck.id}': ${msg}`, {
+        deckId: deck.id,
+        cardIndex: i,
+      });
+    }
+  });
+  if (cards.length < 3) {
+    throw new DeckValidationError(
+      `deck '${deck.id}' has only ${cards.length} cards; tarot needs at least 3`,
+      { deckId: deck.id },
+    );
+  }
+  VALIDATED.set(deck.id, cards);
+  return cards;
+}
+
+/**
  * Stable 32-bit hash of the diff. Drives reproducibility: the same diff
  * always pulls the same three cards in the same orientation.
  */
@@ -67,13 +171,20 @@ export function hashDiff(diff: string): number {
 }
 
 /**
- * Deterministically draw N distinct cards from a 22-card deck.
+ * Deterministically draw N distinct cards from the resolved deck.
  * Uses a Linear Congruential Generator seeded from the diff hash so the
  * same diff + spread always produces the same cards in the same orientation.
  */
 export function drawTarot(diff: string, opts?: MethodCallOptions): DrawnSymbol[] {
   const spreadId = resolveSpread(opts);
   const slots = spreadSlots(spreadId);
+  const cards = resolveDeckCards(opts);
+  if (cards.length < slots.length) {
+    throw new DeckValidationError(
+      `deck '${opts?.deck?.id ?? "(default)"}' has ${cards.length} cards; spread '${spreadId}' needs ${slots.length}`,
+      { deckId: opts?.deck?.id ?? null },
+    );
+  }
   // Preserve the original three-card seed for back-compat with snapshots;
   // mix the spread id into the seed only for alternate spreads so each
   // spread draws an independent shuffle from the same diff.
@@ -87,15 +198,15 @@ export function drawTarot(diff: string, opts?: MethodCallOptions): DrawnSymbol[]
     return state;
   };
 
-  const count = Math.min(slots.length, ARCANA.length);
+  const count = Math.min(slots.length, cards.length);
   const indices: number[] = [];
   while (indices.length < count) {
-    const candidate = next() % ARCANA.length;
+    const candidate = next() % cards.length;
     if (!indices.includes(candidate)) indices.push(candidate);
   }
 
   return indices.map((idx, i) => {
-    const card = ARCANA[idx];
+    const card = cards[idx];
     const reversed = (next() & 1) === 1;
     return {
       id: `arcana:${card.id}`,
@@ -257,6 +368,14 @@ function truncate(text: string, max: number): string {
   return text.length <= max ? text : text.slice(0, Math.max(0, max - 1)) + "…";
 }
 
+/**
+ * Reset the per-deck validation cache. Exposed for tests that mutate deck
+ * fixtures between assertions; not part of the public runtime API.
+ */
+export function resetTarotDeckCache(): void {
+  VALIDATED.clear();
+}
+
 export const tarot: DivinationMethod = {
   id: "tarot",
   name: "Tarot — Past / Present / Future (or Celtic Cross)",
@@ -270,17 +389,18 @@ export const tarot: DivinationMethod = {
   readingPrompt(symbols: DrawnSymbol[], diff: string, opts?: MethodCallOptions): ChatMessage[] {
     const spreadId = resolveSpread(opts);
     const symbolStrings = symbols.map(describeSymbol);
+    const deckLabel = opts?.deck ? ` (deck: ${opts.deck.name})` : "";
     const extraSystem =
       spreadId === "celtic-cross"
         ? [
-            "You are reading a 10-card Celtic Cross Major Arcana spread for a sizable pull request.",
+            `You are reading a 10-card Celtic Cross Major Arcana spread${deckLabel} for a sizable pull request.`,
             "Address each slot in order (Significator, Challenge, Foundation, Recent Past, Crown,",
             "Near Future, Self, Environment, Hopes/Fears, Outcome) in one short sentence each,",
             "tying each card's meaning to something concrete in the diff.",
             "Close with a single 'Verdict:' line giving the final merge prophecy.",
           ].join(" ")
         : [
-            "You are reading a 3-card Major Arcana tarot spread for a pull request.",
+            `You are reading a 3-card Major Arcana tarot spread${deckLabel} for a pull request.`,
             "Address each slot in order (Past, Present, Future) in 1–2 sentences,",
             "tying each card's meaning to something concrete in the diff.",
             "Close with a single 'Verdict:' line giving a merge prophecy.",

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://rwrife.github.io/merge-oracle/deck.schema.json",
+  "id": "tiny-tarot",
+  "name": "Tiny Tarot (5 cards, three-card only)",
+  "method": "tarot",
+  "version": 1,
+  "cards": [
+    {
+      "id": "spark",
+      "name": "The Spark",
+      "keywords": ["ignition", "beginning"],
+      "upright": "the diff kindles a new idea; the reviewers lean in.",
+      "reversed": "a false start; the ember dies before the branch draws breath."
+    },
+    {
+      "id": "forge",
+      "name": "The Forge",
+      "keywords": ["craft", "iteration"],
+      "upright": "the change is hammered into shape; conventions are honored.",
+      "reversed": "brittle temper; the code cracks under its first test."
+    },
+    {
+      "id": "mirror",
+      "name": "The Mirror",
+      "keywords": ["review", "reflection"],
+      "upright": "eyes fall upon the code and see it as it is; a fair reading.",
+      "reversed": "self-deception; the author has not read their own diff."
+    },
+    {
+      "id": "bridge",
+      "name": "The Bridge",
+      "keywords": ["merge", "integration"],
+      "upright": "two branches meet without shudder; CI hums beneath the arch.",
+      "reversed": "the span collapses at the seam; conflicts hide in the abutments."
+    },
+    {
+      "id": "sunrise",
+      "name": "The Sunrise",
+      "keywords": ["release", "ship"],
+      "upright": "the change ships at first light; production greets it gently.",
+      "reversed": "false dawn; the deploy pipe stalls and dusk returns."
+    }
+  ]
+}

@@ -18,7 +18,7 @@ interface Hexagram {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DECK_PATH = resolve(HERE, "../data/decks/i-ching.json");
-const HEXAGRAMS: Hexagram[] = JSON.parse(readFileSync(DECK_PATH, "utf8"));
+const HEXAGRAMS: Hexagram[] = (JSON.parse(readFileSync(DECK_PATH, "utf8")) as { cards: Hexagram[] }).cards;
 const BY_BINARY = new Map(HEXAGRAMS.map((h) => [h.binary, h] as const));
 
 /**
