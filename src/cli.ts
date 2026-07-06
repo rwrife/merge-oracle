@@ -42,6 +42,17 @@ import {
   renderCardPng,
   type PngThemeId,
 } from "./render/png.js";
+import {
+  DEFAULT_REVIEWER_MOOD_LIMIT,
+  MAX_REVIEWER_MOOD_LIMIT,
+  collectReviewerMood,
+  extractReviewersFromPrView,
+  parseReviewerList,
+  renderReviewerMoodSection,
+  reviewerMoodJsonSection,
+  reviewerMoodPromptFragment,
+} from "./reviewers/history.js";
+import { parsePrOrigin } from "./history.js";
 import { writeFileSync } from "node:fs";
 
 const program = new Command();
@@ -93,6 +104,16 @@ program
     "--deck <id-or-path>",
     "deck id (see `oracle decks`) or path to a deck JSON file (methods that support alternate decks only)",
   )
+  .option(
+    "--with-reviewer-mood [logins]",
+    "fold reviewer history into the prompt; optional comma-separated logins (default: auto-detect from PR)",
+  )
+  .option("--refresh-reviewer-mood", "ignore the SQLite cache and re-fetch reviewer history")
+  .option(
+    "--reviewer-mood-limit <n>",
+    `closed PRs to scan per reviewer (max ${MAX_REVIEWER_MOOD_LIMIT})`,
+    String(DEFAULT_REVIEWER_MOOD_LIMIT),
+  )
   .action(
     async (
       source: string,
@@ -108,6 +129,9 @@ program
         pngTheme: string;
         pngSize?: string;
         deck?: string;
+        withReviewerMood?: string | boolean;
+        refreshReviewerMood?: boolean;
+        reviewerMoodLimit: string;
       },
     ) => {
     const method = getMethod(opts.method);
@@ -187,6 +211,69 @@ program
     });
     const callOpts = spread || deck ? { spread, deck } : undefined;
     const symbols = method.draw(loaded.diff, callOpts);
+
+    // ---------- Reviewer mood (issue #36) ----------
+    // Flag was omitted entirely: zero effect on prompt, JSON, or network.
+    const moodRequested = opts.withReviewerMood !== undefined;
+    let reviewerMoodBlob: Awaited<ReturnType<typeof collectReviewerMood>> | null = null;
+    if (moodRequested) {
+      const moodLimit = Number.parseInt(opts.reviewerMoodLimit, 10);
+      if (!Number.isFinite(moodLimit) || moodLimit <= 0 || moodLimit > MAX_REVIEWER_MOOD_LIMIT) {
+        console.error(
+          `--reviewer-mood-limit must be a positive integer <= ${MAX_REVIEWER_MOOD_LIMIT}`,
+        );
+        process.exit(2);
+        return;
+      }
+      const explicit = parseReviewerList(opts.withReviewerMood);
+      const autoDetected = extractReviewersFromPrView(loaded.meta);
+      const reviewers = explicit.length > 0 ? explicit : autoDetected;
+      const { repo } = parsePrOrigin(loaded.origin);
+      if (reviewers.length === 0) {
+        // Render an empty, honest section rather than pretending.
+        reviewerMoodBlob = {
+          fetchedAt: new Date().toISOString(),
+          ttlMs: 0,
+          limit: moodLimit,
+          offline: opts.offline === true,
+          reviewers: [],
+        };
+      } else {
+        try {
+          reviewerMoodBlob = await collectReviewerMood({
+            repo,
+            reviewers,
+            limit: moodLimit,
+            offline: opts.offline === true || repo == null,
+            refresh: opts.refreshReviewerMood === true,
+          });
+        } catch (err) {
+          // Never fail a reading over the mood section.
+          process.stderr.write(`⚠ reviewer-mood: ${(err as Error).message}\n`);
+          reviewerMoodBlob = {
+            fetchedAt: new Date().toISOString(),
+            ttlMs: 0,
+            limit: moodLimit,
+            offline: true,
+            reviewers: reviewers.map((login) => ({
+              login,
+              tone: "unknown" as const,
+              approvals: 0,
+              changesRequested: 0,
+              commented: 0,
+              dismissed: 0,
+              meanRounds: 0,
+              nitpickRate: 0,
+              topKeywords: [],
+              totalReviews: 0,
+              summary: `@${login} — insufficient signal (${(err as Error).message || "lookup failed"}).`,
+              insufficient: true,
+              offline: false,
+            })),
+          };
+        }
+      }
+    }
     try {
       const client = opts.offline
         ? createOfflineClient(persona.offlineLines(symbols))
@@ -197,6 +284,12 @@ program
           ...messages,
           { role: "system", content: `Persona — ${persona.name}: ${persona.systemPrompt}` },
         ];
+      }
+      // Reviewer-mood fragment rides in as an extra system message so it
+      // biases the reading without polluting the base method prompt.
+      if (reviewerMoodBlob && reviewerMoodBlob.reviewers.length > 0) {
+        const fragment = reviewerMoodPromptFragment(reviewerMoodBlob);
+        if (fragment) messages = [...messages, { role: "system", content: fragment }];
       }
       const reading = await client.complete(messages);
       let historyId: number | null = null;
@@ -279,7 +372,14 @@ program
               diffLoc: countDiffLoc(loaded.diff),
               bigPrThreshold: threshold,
               symbols,
-              reading,
+              reading: reviewerMoodBlob
+                ? {
+                    text: reading,
+                    sections: {
+                      reviewerMood: reviewerMoodJsonSection(reviewerMoodBlob),
+                    },
+                  }
+                : reading,
               historyId,
               png: pngResult,
             },
@@ -301,6 +401,10 @@ program
           : "";
       // When --png=-, the PNG bytes were already written to stdout; skip the text card.
       if (pngResult && pngResult.path === "-") return;
+      const moodTail =
+        reviewerMoodBlob && reviewerMoodBlob.reviewers.length > 0
+          ? `\n${renderReviewerMoodSection(reviewerMoodBlob)}`
+          : "";
       process.stdout.write(
         `🔮 ${method.name}\n` +
           `   source: ${loaded.source} (${loaded.origin}, ${loaded.diff.length} bytes)\n` +
@@ -310,7 +414,7 @@ program
           `   channel: ${client.id}\n` +
           historyLabel +
           pngLabel +
-          `\n${art}\n\n${reading}\n`,
+          `\n${art}\n\n${reading}\n${moodTail}`,
       );
     } catch (err) {
       if (err instanceof MissingApiKeyError) {
