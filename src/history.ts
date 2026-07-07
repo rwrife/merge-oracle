@@ -65,19 +65,28 @@ export function parsePrOrigin(origin: string): { repo: string | null; prNumber: 
 }
 
 export class HistoryStore {
-  private db: Database.Database;
+  private db_: Database.Database;
   readonly path: string;
 
   constructor(path: string = defaultHistoryPath()) {
     this.path = path;
     mkdirSync(dirname(path), { recursive: true });
-    this.db = new Database(path);
-    this.db.pragma("journal_mode = WAL");
+    this.db_ = new Database(path);
+    this.db_.pragma("journal_mode = WAL");
     this.migrate();
   }
 
+  /**
+   * Underlying handle. Kept read-only-ish (typed as the driver's Database)
+   * so cohabiting modules like `reviewers/history.ts` can attach their own
+   * tables without us re-exporting the schema surface.
+   */
+  get db(): Database.Database {
+    return this.db_;
+  }
+
   private migrate(): void {
-    this.db.exec(`
+    this.db_.exec(`
       CREATE TABLE IF NOT EXISTS schema_meta (
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
@@ -103,23 +112,23 @@ export class HistoryStore {
       CREATE INDEX IF NOT EXISTS idx_readings_persona ON readings(persona_id);
       CREATE INDEX IF NOT EXISTS idx_readings_created ON readings(created_at DESC);
     `);
-    const row = this.db.prepare("SELECT value FROM schema_meta WHERE key = 'version'").get() as { value: string } | undefined;
+    const row = this.db_.prepare("SELECT value FROM schema_meta WHERE key = 'version'").get() as { value: string } | undefined;
     const current = row ? Number.parseInt(row.value, 10) : 0;
     if (current < SCHEMA_VERSION) {
       // Future migrations go here, guarded by version checks.
-      this.db.prepare("INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('version', ?)")
+      this.db_.prepare("INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('version', ?)")
         .run(String(SCHEMA_VERSION));
     }
   }
 
   close(): void {
-    this.db.close();
+    this.db_.close();
   }
 
   insert(input: HistoryRecordInput): HistoryRow {
     const sha = createHash("sha256").update(input.loaded.diff).digest("hex");
     const { repo, prNumber, prUrl } = parsePrOrigin(input.loaded.origin);
-    const stmt = this.db.prepare(`
+    const stmt = this.db_.prepare(`
       INSERT INTO readings (repo, pr_number, pr_url, diff_sha256, method_id, persona_id, spread, symbols_json, reading, channel)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
@@ -139,7 +148,7 @@ export class HistoryStore {
   }
 
   get(id: number): HistoryRow | null {
-    const row = this.db.prepare(SELECT_SQL + " WHERE id = ?").get(id) as any;
+    const row = this.db_.prepare(SELECT_SQL + " WHERE id = ?").get(id) as any;
     return row ? mapRow(row) : null;
   }
 
@@ -156,12 +165,12 @@ export class HistoryStore {
     if (filter.personaId) { where.push("persona_id = ?"); params.push(filter.personaId); }
     const clause = where.length ? " WHERE " + where.join(" AND ") : "";
     const limit = Math.max(1, Math.min(1000, filter.limit ?? 20));
-    const rows = this.db.prepare(SELECT_SQL + clause + " ORDER BY id DESC LIMIT ?").all(...params, limit) as any[];
+    const rows = this.db_.prepare(SELECT_SQL + clause + " ORDER BY id DESC LIMIT ?").all(...params, limit) as any[];
     return rows.map(mapRow);
   }
 
   setOutcome(id: number, outcome: Outcome): HistoryRow | null {
-    const info = this.db.prepare(
+    const info = this.db_.prepare(
       "UPDATE readings SET outcome = ?, outcome_at = datetime('now') WHERE id = ?",
     ).run(outcome, id);
     if (info.changes === 0) return null;
@@ -169,15 +178,15 @@ export class HistoryStore {
   }
 
   stats(): HistoryStats {
-    const total = (this.db.prepare("SELECT COUNT(*) AS c FROM readings").get() as { c: number }).c;
-    const outcomeRows = this.db.prepare(
+    const total = (this.db_.prepare("SELECT COUNT(*) AS c FROM readings").get() as { c: number }).c;
+    const outcomeRows = this.db_.prepare(
       "SELECT COALESCE(outcome, 'pending') AS o, COUNT(*) AS c FROM readings GROUP BY o",
     ).all() as Array<{ o: string; c: number }>;
     const byOutcome: Record<string, number> = {};
     for (const r of outcomeRows) byOutcome[r.o] = r.c;
 
     const groupBy = (col: "method_id" | "persona_id") =>
-      (this.db.prepare(
+      (this.db_.prepare(
         `SELECT ${col} AS g,
            COUNT(*) AS total,
            SUM(CASE WHEN outcome = 'merged' THEN 1 ELSE 0 END) AS merged,

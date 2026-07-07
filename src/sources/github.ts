@@ -47,7 +47,11 @@ export function createGithubLoader(gh: GhRunner = defaultGh): DiffLoader {
         "-R",
         repo,
         "--json",
-        "title,author,baseRefName,headRefName,state,url",
+        // NOTE: `requestedReviewers` and `reviews` are picked up here so the
+        // reviewer-mood predictor (issue #36) can auto-detect the review
+        // committee without a second gh round-trip. Older consumers only
+        // read `.title` / `.state` / etc., so the extra fields are safe.
+        "title,author,baseRefName,headRefName,state,url,requestedReviewers,reviews",
       ];
       const diffArgs = ["pr", "diff", n, "-R", repo];
 

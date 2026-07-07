@@ -14,6 +14,10 @@ inputs:
     description: "If 'true', skip the LLM and use the canned offline reading."
     required: false
     default: "false"
+  with-reviewer-mood:
+    description: "If 'true', fold reviewer history (auto-detected from the PR) into the reading via 'oracle read --with-reviewer-mood'."
+    required: false
+    default: "false"
   version:
     description: "Version of @rwrife/merge-oracle to install from npm (e.g. 'latest', '0.1.0')."
     required: false
@@ -98,11 +102,15 @@ runs:
         OPENAI_MODEL: ${{ inputs.openai-model }}
         METHOD: ${{ inputs.method }}
         OFFLINE: ${{ inputs.offline }}
+        WITH_REVIEWER_MOOD: ${{ inputs.with-reviewer-mood }}
       run: |
         set -euo pipefail
         args=(read "${RUNNER_TEMP}/merge-oracle/pr.diff" --method "${METHOD}")
         if [ "${OFFLINE}" = "true" ]; then
           args+=(--offline)
+        fi
+        if [ "${WITH_REVIEWER_MOOD}" = "true" ]; then
+          args+=(--with-reviewer-mood)
         fi
         oracle "${args[@]}" | tee "${RUNNER_TEMP}/merge-oracle/reading.txt"
         {

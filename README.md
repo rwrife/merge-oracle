@@ -311,6 +311,41 @@ oracle verdict 7 --merged            # annotate the outcome (merged|closed|aband
 
 Each row records: timestamp, repo/PR (when inferable), diff sha256, method/persona/spread, drawn symbols, rendered text, and outcome. Schema versions upgrade in place on first run.
 
+### Reviewer mood
+
+Adds a short **reviewer weather** aside beneath the main reading, based on each reviewer's recent history on the target repo. Cheap local heuristics only (approval/change-request/comment ratios, mean rounds, top comment keywords, nitpick rate) — no separate LLM call, and the compact JSON blob is folded into the main prompt so the prophecy is aware of who's about to read it.
+
+```bash
+# Auto: infer reviewers from the PR (requested reviewers + prior reviews)
+oracle read https://github.com/org/repo/pull/42 --with-reviewer-mood
+
+# Manual: specific handles
+oracle read PR.diff --with-reviewer-mood=alice,bob
+
+# Skip the network but still render the section (canned mood)
+oracle read PR.diff --with-reviewer-mood=alice --offline
+
+# Ignore the 24h cache
+oracle read https://github.com/org/repo/pull/42 --with-reviewer-mood --refresh-reviewer-mood
+
+# Scan a wider history window (max 100 closed PRs)
+oracle read https://github.com/org/repo/pull/42 --with-reviewer-mood --reviewer-mood-limit=50
+```
+
+Example tail:
+
+```
+🌗  Reviewer weather
+    @alice — 8 approve / 2 changes-requested / 3 commented across scan. Avg 1.5 rounds/PR. Tone: pragmatic. Nitpick rate: low (0.08). Common terms: tests, types, docs.
+    @bob   — 3 approve / 6 changes-requested / 4 commented across scan. Avg 2 rounds/PR. Tone: rigorous. Nitpick rate: high (0.42). Common terms: tests, naming, security.
+```
+
+The `--json` output gains a `reading.sections.reviewerMood[]` block with the same per-reviewer aggregates, so downstream bots can consume it directly.
+
+**How it works.** Mood aggregates are computed from the last N closed PRs on the repo (default 20, max 100) via `gh api`, cached in the shared history DB (`reviewer_mood` table, 24h TTL, upsert on refresh), and reduced to a compact JSON blob that seeds an extra system message alongside the method prompt. Missing `gh`, no network, or a login with zero prior reviews → the section quietly notes "insufficient signal" and never fails the run. When the flag is omitted, there are zero extra API calls and zero extra tokens in the prompt.
+
+**Privacy.** Only public GitHub logins and aggregate counts (approvals, changes-requested, comments, mean rounds, nitpick rate, top-3 keywords) are stored locally. Review bodies are read to compute keywords/rate and then discarded; they are never persisted to the cache.
+
 ### Shareable reading cards (PNG export)
 
 Readings are screenshot bait, but terminal screenshots look ugly across themes. `--png` renders the reading as an OpenGraph-friendly PNG you can drop straight into Twitter/Bluesky/Slack.
