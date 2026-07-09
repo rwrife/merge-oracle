@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`chronicle/run — offline narrative + runChronicle > renderOfflineChronicle consumes real aggregates and produces the expected shape 1`] = `
+"⚱️ The gathering: 4 readings via last, dominant method tarot.
+🕯️ The Tower (the-tower) appeared 4× — the sign returns; heed its rhythm.
+🕯️ The Fool (the-fool) appeared 3× — the sign returns; heed its rhythm.
+🌗 The team's weather is unrecorded — no reviewer signal in this cohort.
+📜 In the span consulted, the Crone watched the deck fall across 2 methods. Outcomes: pending=4.
+📜 The tarot thread ran hottest, and the omens above kept surfacing — a pattern the walls remember even when the reviewers forget.
+🔮 The prophecy: the next cycle will echo The Tower; prepare accordingly."
+`;

@@ -54,6 +54,18 @@ import {
 } from "./reviewers/history.js";
 import { parsePrOrigin } from "./history.js";
 import { writeFileSync } from "node:fs";
+import {
+  ChronicleSelectionError,
+  selectReadings,
+  type ChronicleSelection,
+} from "./chronicle/select.js";
+import { aggregateReadings } from "./chronicle/aggregate.js";
+import {
+  chronicleJsonBlob,
+  renderChronicleCard,
+  runChronicle,
+} from "./chronicle/run.js";
+import type { ReviewerMoodBlob } from "./reviewers/history.js";
 
 const program = new Command();
 
@@ -747,6 +759,141 @@ program
     if (opts.json) process.stdout.write(JSON.stringify(row, null, 2) + "\n");
     else process.stdout.write(`✓ reading #${row.id} marked as ${row.outcome} (at ${row.outcomeAt})\n`);
     store.close();
+  });
+
+program
+  .command("chronicle")
+  .description("weave a meta-reading across a batch of past PR readings")
+  .option("--last <n>", "chronicle the N most recent readings")
+  .option("--since <date>", "only include readings on/after this date (YYYY-MM-DD or ISO)")
+  .option("--until <date>", "only include readings on/before this date (YYYY-MM-DD or ISO)")
+  .option("--milestone <name>", "chronicle merged PRs in a GitHub milestone (requires --repo)")
+  .option("--all", "chronicle every reading in the local history db")
+  .option("--repo <owner/name>", "restrict to a single repo (required for --milestone)")
+  .option("--persona <id>", "narrator persona id (see `oracle personas`)")
+  .option("--method <id>", "informational filter recorded in the summary (not used to shape narrative)")
+  .option("--top-omens <n>", "how many recurring omens to highlight", "3")
+  .option("--offline", "skip the LLM and return a canned narrative that still consumes the real aggregates")
+  .option("--json", "emit the chronicle as JSON instead of rendered text")
+  .action(async (opts: {
+    last?: string;
+    since?: string;
+    until?: string;
+    milestone?: string;
+    all?: boolean;
+    repo?: string;
+    persona?: string;
+    method?: string;
+    topOmens: string;
+    offline?: boolean;
+    json?: boolean;
+  }) => {
+    const persona = resolvePersona(opts.persona);
+    if (!persona) {
+      console.error(`unknown persona '${opts.persona}'. try \`oracle personas\`.`);
+      process.exit(2);
+      return;
+    }
+    const topOmens = Number.parseInt(opts.topOmens, 10);
+    if (!Number.isFinite(topOmens) || topOmens <= 0 || topOmens > 20) {
+      console.error("--top-omens must be an integer in [1, 20]");
+      process.exit(2);
+      return;
+    }
+    const selection: ChronicleSelection = {
+      last: opts.last != null ? Number.parseInt(opts.last, 10) : undefined,
+      since: opts.since,
+      until: opts.until,
+      milestone: opts.milestone,
+      all: opts.all,
+      repo: opts.repo,
+    };
+    if (opts.last != null && (!Number.isFinite(selection.last) || (selection.last as number) <= 0)) {
+      console.error("--last must be a positive integer");
+      process.exit(2);
+      return;
+    }
+
+    const store = new HistoryStore();
+    try {
+      let selected;
+      try {
+        selected = await selectReadings({ selection, store });
+      } catch (err) {
+        if (err instanceof ChronicleSelectionError) {
+          console.error(err.message);
+          process.exit(2);
+          return;
+        }
+        throw err;
+      }
+      const { rows, summary } = selected;
+
+      // Weather: re-use whatever reviewer-mood blob is closest at hand.
+      // Prior readings don't currently persist their per-run mood blob to
+      // the DB, so for now we synthesize a lightweight blob from any
+      // cached rows the reviewers/history module already wrote. This
+      // keeps chronicle honest today (empty weather when there's no
+      // signal) without prematurely coupling to a schema change.
+      const weatherBlob: ReviewerMoodBlob | null = null;
+
+      if (rows.length === 0) {
+        const msg = "chronicle: the selection matched zero readings. consult the oracle first, then return.";
+        if (opts.json) {
+          process.stdout.write(JSON.stringify({
+            persona: persona.id,
+            channel: opts.offline ? "offline:mock" : null,
+            chronicle: {
+              selection: summary,
+              omens: [],
+              weather: null,
+              narrative: "",
+              prophecy: null,
+            },
+            aggregates: { methodTallies: [], personaTallies: [], outcomeTallies: {}, repos: [] },
+            consulted: [],
+            note: msg,
+          }, null, 2) + "\n");
+        } else {
+          process.stdout.write(`${msg}\n`);
+        }
+        return;
+      }
+
+      const aggregate = aggregateReadings(rows, { topOmens, weather: weatherBlob });
+
+      try {
+        const client = opts.offline
+          ? createOfflineClient(persona.offlineLines([]))
+          : createLlmClient({ offline: opts.offline });
+        const reading = await runChronicle({
+          aggregate,
+          selection: summary,
+          persona,
+          client,
+          offline: opts.offline === true,
+        });
+
+        if (opts.json) {
+          process.stdout.write(JSON.stringify(
+            chronicleJsonBlob({ aggregate, selection: summary, persona, reading, rows }),
+            null,
+            2,
+          ) + "\n");
+          return;
+        }
+        process.stdout.write(renderChronicleCard({ aggregate, selection: summary, persona, reading }));
+      } catch (err) {
+        if (err instanceof MissingApiKeyError) {
+          console.error(err.message);
+          process.exit(2);
+          return;
+        }
+        throw err;
+      }
+    } finally {
+      store.close();
+    }
   });
 
 program
