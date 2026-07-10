@@ -368,6 +368,53 @@ Cards are rendered with [satori](https://github.com/vercel/satori) (JSX → SVG)
 
 ![example reading card](docs/reading-card-dark.png)
 
+## Advanced rituals
+
+### Chronicle: meta-readings across many PRs
+
+A single reading is a snapshot; a **chronicle** is a season. `oracle chronicle` composes a meta-reading over a batch of past readings from the local history DB — the last N, a date range, everything in a GitHub milestone, or the whole archive — and returns a single ritual narrative about the repo's arc: recurring omens, the team's mood, and a prophecy for the next release cycle.
+
+```bash
+# The last 10 readings in the local history DB
+oracle chronicle --last=10
+
+# All merged PRs in a milestone (via `gh api search/issues`; requires --repo)
+oracle chronicle --milestone=v0.2 --repo=rwrife/merge-oracle
+
+# A date range (ISO date or full timestamp)
+oracle chronicle --since=2026-06-01 --until=2026-07-01
+
+# Every reading ever recorded
+oracle chronicle --all
+
+# Combine with a persona for a themed retrospective
+oracle chronicle --last=20 --persona=crone --offline
+
+# JSON out for pasting into release notes
+oracle chronicle --last=10 --json
+```
+
+A rendered chronicle has five sections, each on its own line:
+
+- **⚱️ The gathering** — one-line summary of the cohort (count, dominant method).
+- **🕯️ Recurring omens** — the top N symbols (default 3) that showed up across the batch, with an interpretation of what their repetition suggests.
+- **🌗 The team's weather** — aggregated reviewer-mood roll-up (warming / mixed / cooling), when reviewer signal is available.
+- **📜 The chronicle** — a short narrative arc.
+- **🔮 The prophecy** — a single-sentence forecast for the next release cycle.
+
+Flags:
+
+- `--last <n>` / `--since <date>` / `--until <date>` / `--milestone <name>` / `--all` — mutually exclusive selectors.
+- `--repo <owner/name>` — restrict to a single repo. Required for `--milestone`.
+- `--persona <id>` — narrator persona (see `oracle personas`).
+- `--top-omens <n>` — how many recurring omens to highlight (default 3).
+- `--offline` — skip the LLM. Returns a deterministic canned narrative that still consumes the *real* aggregates, so the shape stays honest.
+- `--json` — machine-readable payload with `chronicle.selection`, `chronicle.omens[]`, `chronicle.weather`, `chronicle.narrative`, `chronicle.prophecy`, plus per-row `consulted[]` metadata for further processing.
+
+When the selection matches zero readings, `chronicle` emits a friendly one-liner and exits 0 — nothing to divine yet, consult the oracle first.
+
+**How it works.** The selector pulls rows from the shared history DB (`~/.merge-oracle/history.sqlite`), an aggregator counts symbol frequencies method-agnostically (any past reading contributes — tarot cards, runes, hexagrams, tea shapes, natal signs, life-path numbers), and the LLM sees only the aggregate, never any specific diff. In offline mode the same aggregate feeds a canned template so the offline output shape matches a live reading.
+
 ### LLM configuration (M3)
 The oracle calls any OpenAI-compatible chat endpoint. Configure via env vars:
 
