@@ -370,6 +370,28 @@ Cards are rendered with [satori](https://github.com/vercel/satori) (JSX → SVG)
 
 ## Advanced rituals
 
+### Oracle duel: comparative reading between two contenders
+
+Sometimes two PRs (or two candidate branches) solve the same problem in different ways and the team has to pick one. `oracle duel` casts a reading for each contender, then delivers a **verdict** — which the cards favor, why, and what the losing contender should carry forward.
+
+```bash
+# Duel two PRs from the same repo
+oracle duel https://github.com/you/repo/pull/42 https://github.com/you/repo/pull/43
+
+# Duel two local diff files
+oracle duel ./approach-a.diff ./approach-b.diff --method=runes --offline
+
+# Bare PR numbers with -R (applies to both sides)
+oracle duel 42 43 -R rwrife/merge-oracle --json --offline
+
+# CI bake-off: exit non-zero when the oracle favors the wrong contender
+oracle duel ./a.diff ./b.diff --offline --fail-on=favor-b
+```
+
+The rendered card lays down: `⚔️ The contenders`, one compact `🃏 Reading` per side, an `⚖️ judgement` paragraph, a `🏆 Verdict` with confidence (`low|medium|high`), and a `🕯️ Carry-forward` bullet for the loser. `--json` returns the same information under `duel.a`, `duel.b`, `duel.verdict`, `duel.rationale`, `duel.carryForward`, plus the raw per-side symbols and readings.
+
+Duels refuse stdin (ambiguous — which side is which?) and refuse identical diffs (the oracle declines to duel a reflection). In `--offline` mode the verdict is deterministic: same two diffs always produce the same result, so it's safe to snapshot in CI.
+
 ### Chronicle: meta-readings across many PRs
 
 A single reading is a snapshot; a **chronicle** is a season. `oracle chronicle` composes a meta-reading over a batch of past readings from the local history DB — the last N, a date range, everything in a GitHub milestone, or the whole archive — and returns a single ritual narrative about the repo's arc: recurring omens, the team's mood, and a prophecy for the next release cycle.
