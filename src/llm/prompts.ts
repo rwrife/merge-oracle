@@ -73,6 +73,57 @@ export function assembleReadingPrompt(args: {
 }
 
 /**
+ * Duel framing (issue #41): two contenders, one verdict.
+ *
+ * The duel prompt receives two already-rendered per-contender readings
+ * (compact form) plus lightweight stat summaries — it never re-reads the
+ * raw diffs itself, which keeps the comparative judgement grounded in the
+ * previously-drawn symbols rather than tempting the model to invent new
+ * findings across both sides.
+ *
+ * The response contract is a single JSON object matching {@link DuelVerdictSchema}.
+ * Callers parse defensively; a malformed reply falls back to `favor-neither`.
+ */
+export interface DuelContenderSketch {
+  label: "A" | "B";
+  origin: string;
+  reading: string;
+  stats: { files: number; additions: number; deletions: number };
+}
+
+export function assembleDuelPrompt(args: {
+  a: DuelContenderSketch;
+  b: DuelContenderSketch;
+  methodName: string;
+  extraSystem?: string;
+}): ChatMessage[] {
+  const { a, b, methodName } = args;
+  const block = (c: DuelContenderSketch) =>
+    [
+      `Contender ${c.label} — ${c.origin}`,
+      `stats: files=${c.stats.files}, +${c.stats.additions}/-${c.stats.deletions}`,
+      `reading:`,
+      c.reading,
+    ].join("\n");
+
+  const user = [
+    `Divination method: ${methodName}. You are judging a DUEL between two contenders that solve the same problem.`,
+    "",
+    block(a),
+    "",
+    block(b),
+    "",
+    "Compose two things, in order:",
+    "1. A short comparative narrative (2-3 sentences) — the judgement — as plain prose. Do not repeat the contender readings verbatim.",
+    "2. A single JSON object on its own final line, no code fence, matching exactly:",
+    '   {"verdict":"favor-a"|"favor-b"|"favor-neither","confidence":"low"|"medium"|"high","rationale":"one line","carryForward":"one bullet from the loser worth adopting (omit if favor-neither)"}',
+    "Pick favor-neither only when the readings are genuinely a draw. Keep total output under ~180 words.",
+  ].join("\n");
+
+  return [systemPreamble(args.extraSystem), { role: "user", content: user }];
+}
+
+/**
  * Chronicle framing (issue #40): a *meta-reading* across many past PRs.
  * The chronicle prompt intentionally does NOT include any single diff —
  * it reasons only over the aggregated symbol/reviewer signals so the

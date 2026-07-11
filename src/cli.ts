@@ -67,6 +67,13 @@ import {
 } from "./chronicle/run.js";
 import type { ReviewerMoodBlob } from "./reviewers/history.js";
 
+import { runDuelWithOfflineFallback, DuelInputError, duelJsonBlob, renderDuelCard } from "./duel.js";
+import type { LoadedDiff } from "./sources/types.js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const pexecFile = promisify(execFile);
+
 const program = new Command();
 
 program
@@ -436,6 +443,121 @@ program
       throw err;
     }
   });
+
+program
+  .command("duel")
+  .description("comparative reading between two contender diffs/PRs — the oracle picks a winner")
+  .argument("<source-a>", "first contender: PR URL, PR number (with -R), or path to .diff/.patch")
+  .argument("<source-b>", "second contender: PR URL, PR number (with -R), or path to .diff/.patch")
+  .option("-R, --repo <owner/name>", "repo for bare PR numbers (applied to both sides)")
+  .option("--json", "emit the duel as JSON instead of rendered text")
+  .option("--offline", "skip the LLM and use a deterministic offline duel")
+  .option("--method <id>", "divination method id", DEFAULT_METHOD_ID)
+  .option("--persona <id>", "narrator persona id (see `oracle personas`)")
+  .option(
+    "--fail-on <verdict>",
+    "exit non-zero when the verdict is favor-a|favor-b|favor-neither (CI bake-offs)",
+  )
+  .action(
+    async (
+      sourceA: string,
+      sourceB: string,
+      opts: {
+        repo?: string;
+        json?: boolean;
+        offline?: boolean;
+        method: string;
+        persona?: string;
+        failOn?: string;
+      },
+    ) => {
+      const method = getMethod(opts.method);
+      if (!method) {
+        console.error(
+          `unknown divination method: ${opts.method}. try one of: ${listMethods().map((m) => m.id).join(", ")}`,
+        );
+        process.exit(2);
+        return;
+      }
+      if (opts.persona && !getPersona(opts.persona)) {
+        console.error(
+          `unknown persona: ${opts.persona}. try one of: ${listPersonas().map((p) => p.id).join(", ")}`,
+        );
+        process.exit(2);
+        return;
+      }
+      const persona = resolvePersona(opts.persona) ?? resolvePersona(DEFAULT_PERSONA_ID)!;
+      if (opts.failOn && !/^favor-(a|b|neither)$/.test(opts.failOn)) {
+        console.error("--fail-on must be one of: favor-a, favor-b, favor-neither");
+        process.exit(2);
+        return;
+      }
+
+      // Custom loader that expands bare PR numbers via `-R`. Everything else
+      // falls through to the shared `loadDiff` which handles URLs and files.
+      const loadWithRepo = async (locator: string): Promise<LoadedDiff> => {
+        if (/^\d+$/.test(locator)) {
+          if (!opts.repo) {
+            throw new DuelInputError(
+              `contender '${locator}' is a bare PR number; pass -R <owner/name> so the oracle knows where to look`,
+            );
+          }
+          const [view, diff] = await Promise.all([
+            pexecFile("gh", [
+              "pr", "view", locator, "-R", opts.repo, "--json",
+              "title,author,baseRefName,headRefName,state,url",
+            ], { maxBuffer: 32 * 1024 * 1024 }),
+            pexecFile("gh", ["pr", "diff", locator, "-R", opts.repo], {
+              maxBuffer: 32 * 1024 * 1024,
+            }),
+          ]);
+          let meta: Record<string, unknown> = {};
+          try { meta = JSON.parse(view.stdout); } catch { meta = { raw: view.stdout }; }
+          return {
+            source: "github",
+            origin: `${opts.repo}#${locator}`,
+            diff: diff.stdout,
+            meta,
+          };
+        }
+        return loadDiff(locator);
+      };
+
+      try {
+        const client = opts.offline
+          ? createOfflineClient(persona.offlineLines([]))
+          : createLlmClient({ offline: opts.offline });
+        const result = await runDuelWithOfflineFallback({
+          sourceA,
+          sourceB,
+          method,
+          persona,
+          client,
+          load: loadWithRepo,
+        });
+        if (opts.json) {
+          process.stdout.write(JSON.stringify(duelJsonBlob(result), null, 2) + "\n");
+        } else {
+          process.stdout.write(renderDuelCard(result));
+        }
+        if (opts.failOn && result.verdict.verdict === opts.failOn) {
+          process.exit(1);
+        }
+      } catch (err) {
+        if (err instanceof DuelInputError) {
+          console.error(err.message);
+          process.exit(2);
+          return;
+        }
+        if (err instanceof MissingApiKeyError) {
+          console.error(err.message);
+          process.exit(2);
+          return;
+        }
+        throw err;
+      }
+    },
+  );
 
 program
   .command("methods")
